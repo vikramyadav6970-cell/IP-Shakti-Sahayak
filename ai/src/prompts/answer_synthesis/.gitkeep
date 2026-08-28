@@ -1,0 +1,2 @@
+# Answer synthesis prompt templates — per intent.
+# Loaded by src/reasoning/query_pipeline.py at STEP 7 (LLM synthesis).

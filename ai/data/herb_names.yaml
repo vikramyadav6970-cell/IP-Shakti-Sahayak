@@ -1,0 +1,179 @@
+# Curated Ayurvedic & Indian Medicinal Herb Lookup Table
+# Maps common, Sanskrit, and vernacular names to official botanical binomials.
+# Source: Ayurvedic Pharmacopoeia of India (API) & Botanical Survey of India (BSI).
+
+herbs:
+  ashwagandha:
+    botanical_name: "Withania somnifera"
+    family: "Solanaceae"
+    synonyms: ["asgandh", "indian ginseng", "withania somnifera", "withania"]
+
+  tulsi:
+    botanical_name: "Ocimum sanctum"
+    family: "Lamiaceae"
+    synonyms: ["holy basil", "ocimum sanctum", "ocimum tenuiflorum", "krishna tulsi", "rama tulsi", "tulasi"]
+
+  turmeric:
+    botanical_name: "Curcuma longa"
+    family: "Zingiberaceae"
+    synonyms: ["haridra", "haldi", "curcuma longa", "curcumin"]
+
+  neem:
+    botanical_name: "Azadirachta indica"
+    family: "Meliaceae"
+    synonyms: ["nimba", "azadirachta indica", "margosa"]
+
+  amla:
+    botanical_name: "Emblica officinalis"
+    family: "Phyllanthaceae"
+    synonyms: ["amalaki", "emblica officinalis", "phyllanthus emblica", "indian gooseberry"]
+
+  haritaki:
+    botanical_name: "Terminalia chebula"
+    family: "Combretaceae"
+    synonyms: ["harad", "terminalia chebula", "chebulic myrobalan", "kadukkai"]
+
+  bibhitaki:
+    botanical_name: "Terminalia bellirica"
+    family: "Combretaceae"
+    synonyms: ["baheda", "terminalia bellirica", "belleric myrobalan"]
+
+  guduchi:
+    botanical_name: "Tinospora cordifolia"
+    family: "Menispermaceae"
+    synonyms: ["giloy", "tinospora cordifolia", "amrita", "heart-leaved moonseed"]
+
+  brahmi:
+    botanical_name: "Bacopa monnieri"
+    family: "Plantaginaceae"
+    synonyms: ["bacopa monnieri", "water hyssop", "jalanimba", "brahmi buti"]
+
+  shatavari:
+    botanical_name: "Asparagus racemosus"
+    family: "Asparagaceae"
+    synonyms: ["asparagus racemosus", "satavari", "wild asparagus"]
+
+  arjuna:
+    botanical_name: "Terminalia arjuna"
+    family: "Combretaceae"
+    synonyms: ["terminalia arjuna", "arjun", "arjuna bark"]
+
+  guggulu:
+    botanical_name: "Commiphora wightii"
+    family: "Burseraceae"
+    synonyms: ["commiphora wightii", "commiphora mukul", "guggul", "indian bdellium"]
+
+  kalmegh:
+    botanical_name: "Andrographis paniculata"
+    family: "Acanthaceae"
+    synonyms: ["andrographis paniculata", "king of bitters", "bhunimba", "green chiretta"]
+
+  yashtimadhu:
+    botanical_name: "Glycyrrhiza glabra"
+    family: "Fabaceae"
+    synonyms: ["licorice", "liquorice", "mulethi", "glycyrrhiza glabra", "yastimadhu"]
+
+  shunthi:
+    botanical_name: "Zingiber officinale"
+    family: "Zingiberaceae"
+    synonyms: ["ginger", "dry ginger", "adrak", "zingiber officinale", "sunthi"]
+
+  maricha:
+    botanical_name: "Piper nigrum"
+    family: "Piperaceae"
+    synonyms: ["black pepper", "kali mirch", "piper nigrum"]
+
+  pippali:
+    botanical_name: "Piper longum"
+    family: "Piperaceae"
+    synonyms: ["long pepper", "piper longum", "pipli", "magadhi"]
+
+  ela:
+    botanical_name: "Elettaria cardamomum"
+    family: "Zingiberaceae"
+    synonyms: ["cardamom", "green cardamom", "elaichi", "elettaria cardamomum"]
+
+  twak:
+    botanical_name: "Cinnamomum verum"
+    family: "Lauraceae"
+    synonyms: ["cinnamon", "dalchini", "cinnamomum zeylanicum", "cinnamomum verum"]
+
+  lavanga:
+    botanical_name: "Syzygium aromaticum"
+    family: "Myrtaceae"
+    synonyms: ["clove", "laung", "syzygium aromaticum", "eugenia caryophyllus"]
+
+  methi:
+    botanical_name: "Trigonella foenum-graecum"
+    family: "Fabaceae"
+    synonyms: ["fenugreek", "trigonella foenum-graecum", "methika"]
+
+  kesar:
+    botanical_name: "Crocus sativus"
+    family: "Iridaceae"
+    synonyms: ["saffron", "kumkuma", "crocus sativus", "zafran"]
+
+  chandana:
+    botanical_name: "Santalum album"
+    family: "Santalaceae"
+    synonyms: ["sandalwood", "white sandalwood", "santalum album", "shweta chandana"]
+
+  rakta_chandana:
+    botanical_name: "Pterocarpus santalinus"
+    family: "Fabaceae"
+    synonyms: ["red sanders", "red sandalwood", "pterocarpus santalinus", "lal chandan"]
+
+  jatamansi:
+    botanical_name: "Nardostachys jatamansi"
+    family: "Caprifoliaceae"
+    synonyms: ["spikenard", "nardostachys jatamansi", "indian spikenard", "balchar"]
+
+  shankhpushpi:
+    botanical_name: "Convolvulus pluricaulis"
+    family: "Convolvulaceae"
+    synonyms: ["convolvulus pluricaulis", "convolvulus prostratus", "shankhavali"]
+
+  manjistha:
+    botanical_name: "Rubia cordifolia"
+    family: "Rubiaceae"
+    synonyms: ["indian madder", "rubia cordifolia", "manjith"]
+
+  bhringraj:
+    botanical_name: "Eclipta alba"
+    family: "Asteraceae"
+    synonyms: ["eclipta alba", "eclipta prostrata", "false daisy", "kesharaja"]
+
+  kutki:
+    botanical_name: "Picrorhiza kurroa"
+    family: "Plantaginaceae"
+    synonyms: ["picrorhiza kurroa", "katuki", "picrorhiza"]
+
+  vasaka:
+    botanical_name: "Adhatoda vasica"
+    family: "Acanthaceae"
+    synonyms: ["vasa", "adhatoda vasica", "justicia adhatoda", "malabar nut"]
+
+  sarpgandha:
+    botanical_name: "Rauvolfia serpentina"
+    family: "Apocynaceae"
+    synonyms: ["snakeroot", "rauvolfia serpentina", "sarpagandha", "indian snakeroot"]
+
+  mandukaparni:
+    botanical_name: "Centella asiatica"
+    family: "Apiaceae"
+    synonyms: ["gotu kola", "centella asiatica", "brahmi booti", "indian pennywort"]
+
+  bilva:
+    botanical_name: "Aegle marmelos"
+    family: "Rutaceae"
+    synonyms: ["bael", "bel", "aegle marmelos", "bengal quince"]
+
+  punarnava:
+    botanical_name: "Boerhavia diffusa"
+    family: "Nyctaginaceae"
+    synonyms: ["boerhavia diffusa", "hogweed", "red spiderling"]
+
+  shallaki:
+    botanical_name: "Boswellia serrata"
+    family: "Burseraceae"
+    synonyms: ["boswellia serrata", "indian frankincense", "salai guggul", "shallaki"]

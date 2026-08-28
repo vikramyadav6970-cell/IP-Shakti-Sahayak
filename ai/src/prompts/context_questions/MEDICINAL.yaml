@@ -1,0 +1,30 @@
+# Version: 1.0.0
+# Domain Intent: MEDICINAL
+# Context gathering questions for ASU drug vs FSSAI food regulation pathways.
+
+questions:
+  - question_id: "formulation_type"
+    question_text: "What type of medicinal or healthcare formulation is this product?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "CLASSICAL"
+      - "PROPRIETARY"
+      - "UNKNOWN"
+    help_text: "Classical formulations follow First Schedule texts exactly; Proprietary uses new ratios/excipients."
+
+  - question_id: "from_authoritative_text"
+    question_text: "Is this formulation recipe mentioned directly in authoritative books of the First Schedule to the Drugs Act?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Yes"
+      - "No"
+    help_text: "e.g., Charaka Samhita, Sushruta Samhita, Bhavaprakasha, Ayurvedic Formulary of India (AFI)."
+
+  - question_id: "new_ingredients"
+    question_text: "Are there any novel ingredients, synthetic minerals/vitamins, or non-classical excipients added?"
+    answer_type: "FREE_TEXT"
+    required: false
+    placeholder: "e.g., Synthetic Vitamin C, Zinc gluconate, modern preservatives (or 'None')"
+    help_text: "Synthetic additions disqualify product from classical ASU and Ayurveda Aahara categories."

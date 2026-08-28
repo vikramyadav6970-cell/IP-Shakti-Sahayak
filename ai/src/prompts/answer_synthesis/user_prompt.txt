@@ -1,0 +1,18 @@
+User Question:
+{question}
+
+User Intent:
+{domain_intent}
+
+Extracted Entities:
+- Herbs: {herbs}
+- Target Jurisdictions: {jurisdictions}
+- Relevant IP/Regulatory Types: {ip_types}
+- Formulation Name: {formulation_name}
+- Destination Country: {destination_country}
+
+Authoritative Evidence Retrieved from Verified Corpus:
+{evidence_blocks}
+
+Instructions:
+Synthesize an authoritative, step-by-step regulatory advisory answering the user's question. Reference specific statutory sections, pharmacopoeial standards, and required procedural forms. Place inline citations `[chunk_id]` for each assertion.

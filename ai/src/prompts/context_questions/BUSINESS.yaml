@@ -1,0 +1,31 @@
+# Version: 1.0.0
+# Domain Intent: BUSINESS
+# Context gathering questions for brand protection, trademark, GI, and packaging design.
+
+questions:
+  - question_id: "product_type"
+    question_text: "What type of product or commercial service are you launching?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Ayurvedic Medicine (Class 5)"
+      - "Herbal Skincare / Cosmetic (Class 3)"
+      - "Ayurveda Aahara / Herbal Food (Class 30/32)"
+      - "Cultivated Herbal Raw Material / GI"
+      - "Ayurvedic Healthcare Services (Class 44)"
+
+  - question_id: "brand_name"
+    question_text: "What is your proposed brand name or trademark?"
+    answer_type: "FREE_TEXT"
+    required: false
+    placeholder: "e.g., AyurShakti, VedaGlow (or leave blank if undecided)"
+    help_text: "Purely descriptive Ayurvedic terms (e.g. 'Pure Triphala') face absolute grounds for refusal under Section 9."
+
+  - question_id: "target_market"
+    question_text: "What is your target market for commercial distribution?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "INDIA"
+      - "INTERNATIONAL"
+      - "BOTH"

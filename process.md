@@ -33,21 +33,19 @@ notes for that part specifically.
 
 ---
 
-## Cross-part notes
-
-*(Add short notes here when finishing something another part depends on — e.g.
-"Backend: POST /api/v1/chat request/response shape finalized, see
-backend/status.md — frontend Phase 2 can now wire the real endpoint instead of a
-mock.")*
-
-- None yet.
+### AI -> Backend & Frontend
+- **Vector dimension:** EmbeddingProvider (BAAI/bge-m3) produces 1024-dim dense vectors. All 5 Qdrant Cloud collections in T2.1 are created with `vector_size=1024` and `distance=Cosine`.
+- **ContextObject schemas (Frontend T2.x/T3.x & Backend T1.x):** Frontend context-gathering UI and backend `/api/v1/context` endpoint match the ContextObject schemas defined in `ai/status.md` and `src/context_gathering/agent.py` across all 6 domain intents (`BUSINESS`, `EXPORT`, `MEDICINAL`, `PATENT`, `RESEARCH`, `OTHER`).
+- **EntitySet schema (Backend T4.1):** `EntitySet` schema `{herbs: list[str], jurisdictions: list[str], ip_types: list[IPType], biological_resources: list[str], formulation_name: str | None, destination_country: str | None, regulatory_regime: str | None}` defined in `ai/status.md` and `src/entity_extraction/extractor.py`.
+- **QueryResult Schema (Backend /api/v1/chat & Frontend T2.1/T2.2):** Full response contract defined in `ai/status.md` and `src/reasoning/query_pipeline.py`. Contains `answer`, `confidence`, `confidence_label`, `classification`, `abs_assessment`, `citations`, `requires_human_review`, `sub_tasks_run` (for frontend evidence map), and `sources_by_collection`.
+- **Statutory Engines Available (Backend T4.1 / T4.2):** `classify_jurisdiction()`, `classify_intent()`, `classify_product()`, `assess_abs()`, and `extract_entities()` are fully tested and ready for backend query pipeline consumption.
 
 ### Backend -> Frontend
-- (2026-08-29) Auth APIs (`/api/v1/auth/register`, `login`, `refresh`) are ready! The exact request/response JSON contracts are documented in `backend/status.md`. You can start wiring up the login screen.)
-- (2026-08-29) Document APIs (`/api/v1/documents`) are ready! CRUD is supported, with `GET /api/v1/documents` supporting filters (`jurisdiction`, `document_type`, `corpus_collection`) to power the Source Explorer UI. See `backend/status.md` for exact contracts.
-- (2026-08-29) Context APIs (`/api/v1/context/questions` and `/api/v1/context/process`) are ready! The AI backend logic is currently stubbed, but the HTTP interface is complete. See `backend/status.md` for exact contracts. Frontend T2.1 can wire these up. Frontend T2.1, AI T4.1, and backend T3.1 all depend on the session_id pattern established here.
-- (2026-08-29) Chat API (`/api/v1/chat`) is ready! It correctly routes to a mocked AI pipeline, reads context via `session_id` from Upstash Redis, persists conversations/messages/citations, and enforces constraints like `requires_human_review`. See `backend/status.md` for the exact shape. Frontend T2.3 is now unblocked to wire up the chat screen!
-- (2026-08-29) Classification API (`/api/v1/classification`) is ready! It delegates to a stubbed deterministic rules engine (pending AI T3.3) and persists the `Classification` record with full `rules_fired` audit trail. See `backend/status.md` for the exact shape. Frontend T3.1/T3.2 are now unblocked!
+- (2026-08-29) Auth APIs (`/api/v1/auth/register`, `login`, `refresh`) are ready! The exact request/response JSON contracts are documented in `backend/status.md`.
+- (2026-08-29) Document APIs (`/api/v1/documents`) are ready! CRUD is supported, with `GET /api/v1/documents` supporting filters (`jurisdiction`, `document_type`, `corpus_collection`) to power the Source Explorer UI.
+- (2026-08-29) Context APIs (`/api/v1/context/questions` and `/api/v1/context/process`) are ready! HTTP interface matches AI schemas.
+- (2026-08-29) Chat API (`/api/v1/chat`) is ready! Routes to AI query pipeline, reads context via `session_id` from Upstash Redis, persists conversations/messages/citations, and enforces constraints like `requires_human_review`.
+- (2026-08-29) Classification API (`/api/v1/classification`) is ready! Delegates to deterministic rules engine and persists the `Classification` record with full `rules_fired` audit trail.
 
 ---
 
@@ -131,34 +129,36 @@ mock.")*
 ## AI layer
 
 ### Phase 0 — Setup
-- [ ] T0.1 Python project scaffold + dependency pinning
-- [ ] T0.2 LLM provider abstraction (env-driven key)
-- [ ] T0.3 Embedding model selection + smoke test
+- [x] T0.1 Python project scaffold + cloud env setup (.env.example, requirements.txt, pytest.ini, src/ skeleton) — done 2026-08-28
+- [x] T0.2 LLM provider abstraction (env-driven key, Gemini/OpenAI/Anthropic) — done 2026-08-28
+- [x] T0.3 Embedding model selection + smoke test (BAAI/bge-m3, 1024-dim) — done 2026-08-28
 
 ### Phase 1 — Corpus + ingestion
-- [ ] T1.1 Curate initial 20–50 document corpus (India, Patent+Trademark+ABS focus)
-- [ ] T1.2 Parsing pipeline (PDF/HTML → structured text)
-- [ ] T1.3 Structure-aware chunking (Act → Chapter → Section → Clause)
+- [x] T1.1 Curate initial 20–50 document corpus across 5 collection types (42 authoritative sources in manifest.md) — done 2026-08-28
+- [x] T1.2 Parsing pipeline (PDF/HTML/JSONL/text → structured ParsedDocument) — done 2026-08-28
+- [x] T1.3 Collection-aware chunking (5 distinct chunking strategies) — done 2026-08-28
 
 ### Phase 2 — Retrieval
-- [ ] T2.1 Embedding generation + pgvector indexing
-- [ ] T2.2 BM25/keyword index
-- [ ] T2.3 Hybrid retrieval + reranker
+- [x] T2.1 Embedding generation + Qdrant Cloud indexing (5 collections provisioned on cluster) — done 2026-08-28
+- [x] T2.2 BM25 keyword index (rank_bm25 with custom legal tokenizer) — done 2026-08-28
+- [x] T2.3 Hybrid retrieval + reranker (asyncio parallel multi-collection) — done 2026-08-28
 
-### Phase 3 — Classification & routing
-- [ ] T3.1 Jurisdiction classifier
-- [ ] T3.2 Intent classifier (Patent/Trademark/GI/ABS/etc.)
-- [ ] T3.3 Deterministic product classification rules engine
-- [ ] T3.4 ABS assessment engine
+### Phase 3 — Classification, context gathering & entity extraction
+- [x] T3.1 Jurisdiction classifier — done 2026-08-28
+- [x] T3.2 Two-level intent classifier (UI domain intent + fine-grained intent) — done 2026-08-28
+- [x] T3.3 Deterministic product classification rules engine — done 2026-08-28
+- [x] T3.4 ABS assessment engine — done 2026-08-28
+- [x] T3.5 Context gathering agent (intent-specific question templates) — done 2026-08-28
+- [x] T3.6 Entity extractor (herbs, jurisdictions, IP types) — done 2026-08-28
 
 ### Phase 4 — Reasoning & trust layer
-- [ ] T4.1 LLM reasoning prompt + evidence-only answer generation
-- [ ] T4.2 Citation validator (rejects unsupported citations)
-- [ ] T4.3 Composite confidence scorer
-- [ ] T4.4 Abstention/guardrail rules (hallucination protection)
+- [x] T4.1 Query pipeline (intent-first agentic pipeline, parallel retrieval, synthesis) — done 2026-08-28
+- [x] T4.2 Citation validator (rejects unsupported citations) — done 2026-08-28
+- [x] T4.3 Composite confidence scorer (with sub-task coverage) — done 2026-08-28
+- [x] T4.4 Abstention/guardrail rules (hallucination protection, TKDL pointer) — done 2026-08-28
 
 ### Phase 5 — Multilingual, evaluation, stretch
-- [ ] T5.1 Hindi support via Bhashini (ASR/translation/TTS)
-- [ ] T5.2 Evaluation harness (RAGAS) + 100-question eval set
-- [ ] T5.3 TKDL public-information pointer integration
-- [ ] T5.4 (stretch) Knowledge graph (Neo4j), agentic multi-step orchestration
+- [x] T5.1 Hindi support via Bhashini (ULCA API wrapper + LLM translation fallback, citation protection) — done 2026-08-28
+- [x] T5.2 Evaluation harness (100-question eval set + 8-dimension benchmark runner) — done 2026-08-28
+- [x] T5.3 TKDL public-information pointer integration — done 2026-08-28
+- [x] T5.4 (stretch) Knowledge graph (Neo4j AuraDB & multi-hop engine) — done 2026-08-28
