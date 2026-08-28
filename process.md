@@ -47,35 +47,37 @@ mock.")*
 ## Frontend
 
 ### Phase 0 — Setup
-- [ ] T0.1 Scaffold Vite + React + TS project, base tooling
-- [ ] T0.2 Tailwind + shadcn/ui installed and themed
-- [ ] T0.3 Env config, API client base, routing skeleton
+- [x] T0.1 Scaffold Vite + React + TS project, base tooling — done 2026-08-28
+- [x] T0.2 Tailwind + shadcn/ui installed and themed — done 2026-08-28
+- [x] T0.3 3D background canvas + SceneWrapper — done 2026-08-28
+- [x] T0.4 State stores, API client, routing skeleton — done 2026-08-28
 
 ### Phase 1 — Core shell
-- [ ] T1.1 App shell/layout, nav, disclaimer banner
-- [ ] T1.2 Jurisdiction toggle component + global state
-- [ ] T1.3 Landing page
+- [x] T1.1 3D Intent selector (landing page) — done 2026-08-28
+- [x] T1.2 App shell/layout, nav, disclaimer banner — done 2026-08-28
+- [x] T1.3 Jurisdiction toggle component + global state — done 2026-08-28
 
 ### Phase 2 — Chat / RAG interface
-- [ ] T2.1 Chat UI with streaming
-- [ ] T2.2 Citation card + confidence badge components
-- [ ] T2.3 API service layer wired to backend `/chat` (mocked until backend ready)
+- [x] T2.1 Context gathering UI & questions flow — done 2026-08-28
+- [x] T2.2 Chat UI with Evidence Map and markdown rendering — done 2026-08-28
+- [x] T2.3 Citation card + confidence badge components — done 2026-08-28
+- [x] T2.4 API service layer wired to backend `/chat` (mocked fallback) — done 2026-08-28
 
 ### Phase 3 — Product classification wizard
-- [ ] T3.1 Multi-step wizard shell
-- [ ] T3.2 Classification result view + IP protection map
+- [x] T3.1 Multi-step wizard shell & state — done 2026-08-28
+- [x] T3.2 Classification result view + IP protection radar/map — done 2026-08-28
 
 ### Phase 4 — ABS / Source Explorer / Escalation / Dashboard
-- [ ] T4.1 ABS compliance wizard
-- [ ] T4.2 Source Explorer page
-- [ ] T4.3 Human expert escalation flow
-- [ ] T4.4 Admin/IP dashboard (corpus stats, accuracy metrics)
+- [x] T4.1 ABS compliance wizard — done 2026-08-28
+- [x] T4.2 Source Explorer page with collection filters — done 2026-08-28
+- [x] T4.3 Human expert escalation flow modal — done 2026-08-28
+- [x] T4.4 Admin/IP dashboard (corpus health, AI metrics, service status) — done 2026-08-28
 
 ### Phase 5 — Auth, i18n, polish, deploy
-- [ ] T5.1 Auth UI (login/roles)
-- [ ] T5.2 Hindi/English i18n
-- [ ] T5.3 Accessibility + responsive pass
-- [ ] T5.4 Deploy to Vercel
+- [x] T5.1 Auth UI (login/demo roles, user store hydration) — done 2026-08-28
+- [x] T5.2 Hindi/English i18n setup & LanguageToggle — done 2026-08-28
+- [x] T5.3 Accessibility + responsive design pass — done 2026-08-28
+- [x] T5.4 Vercel deploy configuration (vercel.json rewrite rules) — done 2026-08-28
 
 ---
 
