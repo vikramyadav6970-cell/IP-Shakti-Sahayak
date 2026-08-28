@@ -1,0 +1,148 @@
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+@import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS — fixed palette from coding_conventions.md
+   ============================================================ */
+:root {
+  /* Core palette */
+  --color-void: #030712;
+  --color-surface: #0f172a;
+  --color-surface-up: #1e293b;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-teal: #2dd4bf;
+  --color-gold: #f59e0b;
+  --color-violet: #8b5cf6;
+  --color-text: #f1f5f9;
+  --color-muted: #94a3b8;
+
+  /* shadcn/ui mappings — dark theme */
+  --background: var(--color-void);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-teal);
+  --primary-foreground: #030712;
+  --secondary: var(--color-gold);
+  --secondary-foreground: #030712;
+  --muted: var(--color-surface-up);
+  --muted-foreground: var(--color-muted);
+  --accent: var(--color-violet);
+  --accent-foreground: var(--color-text);
+  --destructive: #ef4444;
+  --destructive-foreground: var(--color-text);
+  --border: var(--color-border);
+  --input: var(--color-surface-up);
+  --ring: var(--color-teal);
+  --radius: 0.75rem;
+
+  /* Typography */
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* ============================================================
+   BASE RESET + DEFAULTS
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-void);
+  min-height: 100dvh;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* ============================================================
+   GLASSMORPHISM UTILITY
+   ============================================================ */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.glass-hover {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-hover:hover {
+  border-color: rgba(45, 212, 191, 0.3);
+  box-shadow:
+    0 0 0 1px var(--color-teal),
+    0 0 20px rgba(45, 212, 191, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   SCROLLBAR (dark theme)
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-up);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* ============================================================
+   REDUCE MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
+::selection {
+  background-color: rgba(45, 212, 191, 0.3);
+  color: var(--color-text);
+}
