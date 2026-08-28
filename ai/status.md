@@ -196,6 +196,12 @@ def query_knowledge_graph(
     destination_jurisdiction: str = "EU",
     intent: str = "EXPORT",
 ) -> MultiHopQueryResult
+# Ingestion Celery Task (Backend T2.3 calls into AI ingestion):
+# @celery_app.task(name="ai.tasks.ingest_document")
+def ingest_document(version_id: str):
+    """Retrieve DocumentVersion from Supabase, fetch raw file from storage,
+    parse & chunk per corpus_collection, embed, and index into Qdrant."""
+    pass
 ```
 
 ---

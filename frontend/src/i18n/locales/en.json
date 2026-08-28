@@ -1,0 +1,51 @@
+{
+  "app": {
+    "title": "IP-SAKTI Sahayak",
+    "subtitle": "Ayurvedic IP & Regulatory Assistant",
+    "disclaimer": "Information provided is for educational and guidance purposes only and does not constitute formal legal advice."
+  },
+  "nav": {
+    "chat": "Chat",
+    "classify": "Classify",
+    "abs": "ABS",
+    "sources": "Sources",
+    "admin": "Admin",
+    "new_session": "New Session",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "landing": {
+    "heading": "What do you need help with?",
+    "description": "Select a domain to get AI-powered, citation-grounded IP & regulatory guidance for Ayurvedic products.",
+    "describe_query": "Describe your query",
+    "describe_placeholder": "e.g., I'm developing a turmeric-based skincare cream and want to know about trademark and export regulations...",
+    "cancel": "Cancel",
+    "get_guidance": "Get guidance →"
+  },
+  "intents": {
+    "business": {
+      "title": "Business",
+      "description": "Trademark, GI, copyright & design protection for your Ayurvedic brand and products."
+    },
+    "export": {
+      "title": "Export",
+      "description": "Navigate NBA approvals, CITES, and destination-country regulations for herbal exports."
+    },
+    "medicinal": {
+      "title": "Medicinal",
+      "description": "Drug & food regulatory classification — classical, proprietary, new drug, or Ayurveda-Aahara."
+    },
+    "patent": {
+      "title": "Patent",
+      "description": "Section 3(p) analysis, TKDL prior art, and patent strategy for novel formulations."
+    },
+    "research": {
+      "title": "Research",
+      "description": "ABS compliance, biological resource access, and IP for clinical or academic research."
+    },
+    "other": {
+      "title": "Other",
+      "description": "Describe your query freely — the AI will determine the best guidance pathway."
+    }
+  }
+}
