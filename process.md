@@ -36,7 +36,10 @@ notes for that part specifically.
 ## Cross-part notes
 
 - **Vector dimension:** EmbeddingProvider (BAAI/bge-m3) produces 1024-dim dense vectors. All 5 Qdrant Cloud collections in T2.1 are created with `vector_size=1024` and `distance=Cosine`.
-- **ContextObject schemas:** Frontend context-gathering UI and backend `/api/v1/context` endpoint must match the ContextObject schemas defined in `ai/status.md` and `src/context_gathering/agent.py` for all 6 domain intents.
+- **ContextObject schemas (Frontend T2.x/T3.x & Backend T1.x):** Frontend context-gathering UI and backend `/api/v1/context` endpoint must match the ContextObject schemas defined in `ai/status.md` and `src/context_gathering/agent.py` across all 6 domain intents (`BUSINESS`, `EXPORT`, `MEDICINAL`, `PATENT`, `RESEARCH`, `OTHER`).
+- **EntitySet schema (Backend T4.1):** `EntitySet` schema `{herbs: list[str], jurisdictions: list[str], ip_types: list[IPType], biological_resources: list[str], formulation_name: str | None, destination_country: str | None, regulatory_regime: str | None}` defined in `ai/status.md` and `src/entity_extraction/extractor.py`.
+- **Statutory Engines Available (Backend T4.1 / T4.2):** `classify_jurisdiction()`, `classify_intent()`, `classify_product()`, `assess_abs()`, and `extract_entities()` are fully tested and ready for backend query pipeline consumption.
+- **Frontend Isolation Rule:** Do not touch frontend files in this session as frontend is actively being worked on by the UI team.
 
 ---
 
