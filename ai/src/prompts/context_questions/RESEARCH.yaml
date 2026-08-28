@@ -1,0 +1,31 @@
+# Version: 1.0.0
+# Domain Intent: RESEARCH
+# Context gathering questions for academic/industrial research, bio-prospecting, and international publication.
+
+questions:
+  - question_id: "research_type"
+    question_text: "What is the primary nature of your research?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "CLINICAL"
+      - "PHYTOCHEMICAL"
+      - "IP"
+    help_text: "Clinical research requires CTRI registration; Phytochemical research evaluates active markers."
+
+  - question_id: "biological_resources"
+    question_text: "Does this research involve accessing wild or cultivated Indian biological resources?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Yes"
+      - "No"
+
+  - question_id: "publish_internationally"
+    question_text: "Do you plan to transfer results to foreign researchers or publish with non-Indian co-authors?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Yes"
+      - "No"
+    help_text: "Section 4 of the Biological Diversity Act requires NBA Form II for foreign collaboration transfers."

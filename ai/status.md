@@ -18,7 +18,141 @@ async def retrieve(
     jurisdiction: str,        # HARD filter at Qdrant query level: "INDIA" | "INTERNATIONAL" | "EU" | "USA"
     top_k: int = 8,
 ) -> list[EvidenceChunk]
+
+# T3.1 Jurisdiction Classifier:
+from src.classification.jurisdiction_classifier import JurisdictionClassificationResult, classify_jurisdiction
+
+def classify_jurisdiction(
+    question: str,
+    ui_selected_jurisdiction: str = "INDIA",
+) -> JurisdictionClassificationResult
+
+# T3.2 Intent Classifier & Collection Router:
+from src.classification.intent_classifier import (
+    DomainIntent,
+    FineGrainedIntent,
+    IntentClassificationResult,
+    classify_intent,
+)
+
+def classify_intent(
+    question: str,
+    ui_domain_intent: str | DomainIntent | None = None,
+) -> IntentClassificationResult
+
+# T3.3 Product Classifier Rules Engine:
+from src.classification.product_classifier import (
+    ProductCategory,
+    ProductClassificationInput,
+    ProductClassificationResult,
+    classify_product,
+)
+
+def classify_product(
+    inputs: ProductClassificationInput,
+) -> ProductClassificationResult
+
+# T3.4 ABS Assessment Engine (called by backend T4.2):
+from src.abs.abs_engine import (
+    ABSRelevance,
+    ApplicantType,
+    AccessPurpose,
+    ABSAssessmentInput,
+    ABSAssessmentResult,
+    assess_abs,
+)
+
+def assess_abs(
+    inputs: ABSAssessmentInput,
+) -> ABSAssessmentResult
+
+# T3.5 Context Gathering Agent & Answer Parser (called by backend /api/v1/context):
+from src.context_gathering.agent import (
+    AnswerType,
+    ContextQuestion,
+    ExportContextObject,
+    PatentContextObject,
+    MedicinalContextObject,
+    BusinessContextObject,
+    ResearchContextObject,
+    OtherContextObject,
+    ContextObject,
+    get_context_questions,
+    parse_context_answers,
+)
+
+def get_context_questions(domain_intent: DomainIntent | str) -> list[ContextQuestion]
+def parse_context_answers(domain_intent: DomainIntent | str, raw_answers: dict) -> ContextObject
+
+# T3.6 Entity Extractor (called by Query Decomposer in T4.1):
+from src.entity_extraction.extractor import (
+    IPType,
+    EntitySet,
+    EntityExtractor,
+    extract_entities,
+)
+
+def extract_entities(
+    context: ContextObject | None = None,
+    question: str = "",
+) -> EntitySet
 ```
+
+---
+
+## ContextObject Schemas (API Contract with Frontend & Backend)
+
+Cross-part schemas for structured context gathered from the user before retrieval:
+
+1. **`EXPORT`** (`ExportContextObject`):
+   ```python
+   {
+       "herbs": list[str],                # e.g., ["Withania somnifera", "Ocimum sanctum"]
+       "destination": str,                # e.g., "European Union (EU)", "United States (USA)"
+       "purpose": "COMMERCIAL" | "RESEARCH",
+       "nba_approached": bool,
+       "already_in_market": bool,
+   }
+   ```
+2. **`PATENT`** (`PatentContextObject`):
+   ```python
+   {
+       "novel_aspect": str,               # Specific technological advancement
+       "type": "HERB" | "FORMULATION" | "PROCESS",
+       "prior_art_search_needed": bool,
+       "uses_biological_resources": bool,
+   }
+   ```
+3. **`MEDICINAL`** (`MedicinalContextObject`):
+   ```python
+   {
+       "formulation_type": "CLASSICAL" | "PROPRIETARY" | "UNKNOWN",
+       "from_authoritative_text": bool,
+       "new_ingredients": list[str],
+   }
+   ```
+4. **`BUSINESS`** (`BusinessContextObject`):
+   ```python
+   {
+       "product_type": str,               # e.g., "Ayurvedic Medicine (Class 5)"
+       "brand_name": str | None,
+       "target_market": "INDIA" | "INTERNATIONAL" | "BOTH",
+   }
+   ```
+5. **`RESEARCH`** (`ResearchContextObject`):
+   ```python
+   {
+       "research_type": "CLINICAL" | "PHYTOCHEMICAL" | "IP",
+       "biological_resources": bool,
+       "publish_internationally": bool,
+   }
+   ```
+6. **`OTHER`** (`OtherContextObject`):
+   ```python
+   {
+       "free_description": str,           # Unstructured free text description
+   }
+   ```
 
 ---
 
@@ -51,6 +185,58 @@ Payload fields are stored directly at the top level for efficient metadata filte
 ---
 
 ## Log
+
+### T3.6 — Entity extractor (2026-08-28)
+Implemented `src/entity_extraction/extractor.py` and curated lookup table `ai/data/herb_names.yaml`:
+- `EntityExtractor` and `extract_entities()` resolving botanical Latin binomials from vernacular/Sanskrit/common names across 35+ Ayurvedic herbs.
+- Canonical jurisdiction extraction (`INDIA`, `EU`, `USA`, `UK`, `INTERNATIONAL`) always enforcing domestic Indian compliance.
+- Extracts `IPType` enum values (`PATENT`, `TRADEMARK`, `GI`, `ABS`, `EXPORT`, `DRUG_REGULATION`, `FOOD_REGULATION`).
+- Returns structured `EntitySet` (herbs, jurisdictions, ip_types, biological_resources, formulation_name, destination_country, regulatory_regime).
+- Tested in `ai/tests/test_entity_extraction.py` (100% pass).
+**Phase 3 complete!** All 6 classification, context gathering, and entity extraction tasks are verified.
+
+### T3.5 — Context gathering agent (2026-08-28)
+Implemented `src/context_gathering/agent.py` and versioned templates in `src/prompts/context_questions/`:
+- `ContextGatheringAgent` pre-loads versioned YAML templates for all 6 domain intents (`BUSINESS`, `EXPORT`, `MEDICINAL`, `PATENT`, `RESEARCH`, `OTHER`) at startup.
+- Exposes `get_context_questions()` returning structured `ContextQuestion` list with options, required flags, and answer types (`FREE_TEXT`, `SINGLE_SELECT`, `MULTI_SELECT`).
+- Exposes `parse_context_answers()` returning strictly typed `ContextObject` dataclasses for entity extraction and query decomposition.
+- Tested in `ai/tests/test_context_gathering.py` (100% pass).
+Next task: Phase 3, T3.6 (`src/entity_extraction/extractor.py`).
+
+### T3.4 — ABS assessment engine (2026-08-28)
+Implemented `src/abs/abs_engine.py`:
+- `ABSEngine` and `assess_abs()` implementing deterministic statutory rules under Biological Diversity Act 2002, 2023 Amendment Act, and 2024 Rules.
+- Classifies ABS relevance (`HIGH`, `MEDIUM`, `LOW`, `NOT_APPLICABLE`).
+- Resolves mandatory approval pathways: Section 6 IPR mandate (NBA Form III), Section 3 foreign access (NBA Form I), Section 4 research transfer (NBA Form II), Section 20 third-party transfer (NBA Form IV), and Section 7 Indian commercial manufacturing (SBB Prior Intimation).
+- Encodes 2023 Amendment statutory exemptions (Registered Ayush practitioners, cultivated sources, and Section 40 Normally Traded Commodities).
+- Returns benefit-sharing percentages and ordered action checklists.
+- Tested across all statutory pathways in `ai/tests/test_abs.py` (100% pass).
+Next task: Phase 3, T3.5 (`src/context_gathering/agent.py`).
+
+### T3.3 — Deterministic product classifier rules engine (2026-08-28)
+Implemented `src/classification/product_classifier.py`:
+- `ProductClassifier` and `classify_product()` implementing an explicit, auditable statutory rules engine (no stochastic LLM inference).
+- Encodes all statutory product categories: `CLASSICAL_AYURVEDIC_MEDICINE`, `PROPRIETARY_MEDICINE`, `NEW_NON_CLASSICAL_DRUG`, `PHYTOPHARMACEUTICAL`, `AYURVEDA_AAHARA`, `COSMETIC`, `UNCLEAR`.
+- Encodes strict FSSAI Ayurveda Aahara 2022 food-vs-drug boundaries (prohibits synthetic vitamins/minerals and disease cure claims).
+- Returns category, confidence, regulatory pathway, governing acts/rules, required licensing forms (Form 24D, Form 32, FSSAI), statutory authority, and full auditable `rules_fired` trail.
+- Tested across all rule branches and edge cases in `ai/tests/test_classification.py` (100% pass).
+Next task: Phase 3, T3.4 (`src/abs/abs_engine.py`).
+
+### T3.2 — Two-level intent classifier (2026-08-28)
+Implemented `src/classification/intent_classifier.py`:
+- Level 1 UI Domain Intent (`BUSINESS`, `EXPORT`, `MEDICINAL`, `PATENT`, `RESEARCH`, `OTHER`) mapped directly from user selection or inferred.
+- Level 2 Fine-Grained Legal Intents (`PATENT`, `TRADEMARK`, `GI`, `ABS`, `TKDL`, `DRUG_REGULATION`, `FOOD_REGULATION`, `EXPORT`, etc.) inferred from query text.
+- Encodes coding_conventions.md Rule 11 mapping from intent to Qdrant target collections (`INTENT_TO_COLLECTIONS_MAP`).
+- Tested across all 6 domain intents in `ai/tests/test_classification.py` (100% pass).
+Next task: Phase 3, T3.3 (`src/classification/product_classifier.py`).
+
+### T3.1 — Jurisdiction classifier (2026-08-28)
+Implemented `src/classification/jurisdiction_classifier.py`:
+- `JurisdictionClassifier` and `classify_jurisdiction()` resolving concrete jurisdiction filter values (`INDIA`, `USA`, `EU`, `INTERNATIONAL`).
+- Respects UI jurisdiction toggle as primary ground truth, with explicit mismatch detection when question mentions foreign authorities (US FDA, EU THMPD, WIPO).
+- Detects cross-border export intent (`is_export_query=True`, `target_export_country`).
+- Tested in `ai/tests/test_classification.py` (100% pass).
+Next task: Phase 3, T3.2 (`src/classification/intent_classifier.py`).
 
 ### T2.3 — Hybrid retrieval + reranking (2026-08-28)
 Implemented `src/retrieval/hybrid_retriever.py`:

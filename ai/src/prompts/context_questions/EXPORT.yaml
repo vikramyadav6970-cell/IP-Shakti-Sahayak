@@ -1,0 +1,53 @@
+# Version: 1.0.0
+# Domain Intent: EXPORT
+# Context gathering questions for export, cross-border shipping, and ABS clearance.
+
+questions:
+  - question_id: "herbs"
+    question_text: "Which botanical species, herbal ingredients, or formulations do you intend to export?"
+    answer_type: "FREE_TEXT"
+    required: true
+    placeholder: "e.g., Ashwagandha (Withania somnifera), Tulsi (Ocimum sanctum)"
+    help_text: "List common names or botanical Latin names separated by commas."
+
+  - question_id: "destination"
+    question_text: "What is the primary target export destination / country?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "European Union (EU)"
+      - "United States (USA)"
+      - "United Kingdom (UK)"
+      - "Australia / New Zealand"
+      - "Middle East (GCC)"
+      - "Other International Destination"
+    help_text: "Export compliance regulations differ fundamentally between the EU THMPD and US FDA DSHEA."
+
+  - question_id: "purpose"
+    question_text: "What is the primary purpose of export?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "COMMERCIAL"
+      - "RESEARCH"
+    help_text: "Commercial export triggers standard ABS / SBB benefit sharing; research export requires NBA Form II."
+
+  - question_id: "nba_approached"
+    question_text: "Have you approached the National Biodiversity Authority (NBA) or State Biodiversity Board (SBB)?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Yes"
+      - "No"
+      - "Not sure if required"
+    help_text: "Mandatory under Biological Diversity Act 2002 for commercial biological resource utilization."
+
+  - question_id: "already_in_market"
+    question_text: "Is this product already legally manufactured and marketed in India?"
+    answer_type: "SINGLE_SELECT"
+    required: false
+    options:
+      - "Yes (Licensed ASU Drug)"
+      - "Yes (FSSAI Ayurveda Aahara / Food)"
+      - "Yes (AYUSH Cosmetic)"
+      - "No (New formulation / raw herb)"

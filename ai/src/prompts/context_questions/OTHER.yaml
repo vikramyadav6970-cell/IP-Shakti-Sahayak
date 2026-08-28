@@ -1,0 +1,11 @@
+# Version: 1.0.0
+# Domain Intent: OTHER
+# Single free-text description for unspecified intents.
+
+questions:
+  - question_id: "free_description"
+    question_text: "Please describe your query, product, or specific legal/regulatory assistance required in detail:"
+    answer_type: "FREE_TEXT"
+    required: true
+    placeholder: "e.g., I have developed a specialized packaging dispenser for herbal oils and want to understand design registration..."
+    help_text: "Our AI agent will extract key legal entities and route your inquiry to the relevant regulatory collections."

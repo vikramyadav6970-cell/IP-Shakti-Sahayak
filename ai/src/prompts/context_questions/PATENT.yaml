@@ -1,0 +1,39 @@
+# Version: 1.0.0
+# Domain Intent: PATENT
+# Context gathering questions for Patentability, TKDL prior art, and Section 3(p) analysis.
+
+questions:
+  - question_id: "novel_aspect"
+    question_text: "What is the specific novel aspect or technological advancement of your invention?"
+    answer_type: "FREE_TEXT"
+    required: true
+    placeholder: "e.g., A standardized supercritical CO2 extraction process yielding 5x withanolide content; or a synergistic composition of Curcuma longa and Piperine."
+    help_text: "Section 3(p) of the Patents Act 1970 excludes inventions that merely aggregate known properties of traditionally known components."
+
+  - question_id: "type"
+    question_text: "What is the primary subject matter of your patent claims?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "HERB"
+      - "FORMULATION"
+      - "PROCESS"
+    help_text: "Process/extraction patents generally have higher patentability compared to raw herb combinations."
+
+  - question_id: "prior_art_search_needed"
+    question_text: "Do you need a Traditional Knowledge Digital Library (TKDL) and prior art search conducted?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Yes"
+      - "No"
+    help_text: "Searches against classical Ayurveda treatises to check for anticipation under Section 25/64."
+
+  - question_id: "uses_biological_resources"
+    question_text: "Does this invention utilize biological resources obtained from India?"
+    answer_type: "SINGLE_SELECT"
+    required: true
+    options:
+      - "Yes"
+      - "No"
+    help_text: "If Yes, mandatory Section 6 NBA Form III prior approval is legally required before patent grant."

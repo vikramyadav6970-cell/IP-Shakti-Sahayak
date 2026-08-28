@@ -35,7 +35,8 @@ notes for that part specifically.
 
 ## Cross-part notes
 
-- **AI Layer / Embeddings (T0.3 — 2026-08-28):** Verified `BAAI/bge-m3` embedding model. Vector output dimensionality is **1024** (dense vectors, normalized). All 5 Qdrant Cloud collections in T2.1 and any vector schema in DB/backend must be configured with dimension = 1024, Cosine distance.
+- **Vector dimension:** EmbeddingProvider (BAAI/bge-m3) produces 1024-dim dense vectors. All 5 Qdrant Cloud collections in T2.1 are created with `vector_size=1024` and `distance=Cosine`.
+- **ContextObject schemas:** Frontend context-gathering UI and backend `/api/v1/context` endpoint must match the ContextObject schemas defined in `ai/status.md` and `src/context_gathering/agent.py` for all 6 domain intents.
 
 ---
 
@@ -128,12 +129,12 @@ notes for that part specifically.
 - [x] T2.3 Hybrid retrieval + reranker (asyncio parallel multi-collection) — done 2026-08-28
 
 ### Phase 3 — Classification, context gathering & entity extraction
-- [ ] T3.1 Jurisdiction classifier
-- [ ] T3.2 Two-level intent classifier (UI domain intent + fine-grained intent)
-- [ ] T3.3 Deterministic product classification rules engine
-- [ ] T3.4 ABS assessment engine
-- [ ] T3.5 Context gathering agent (intent-specific question templates)
-- [ ] T3.6 Entity extractor (herbs, jurisdictions, IP types)
+- [x] T3.1 Jurisdiction classifier — done 2026-08-28
+- [x] T3.2 Two-level intent classifier (UI domain intent + fine-grained intent) — done 2026-08-28
+- [x] T3.3 Deterministic product classification rules engine — done 2026-08-28
+- [x] T3.4 ABS assessment engine — done 2026-08-28
+- [x] T3.5 Context gathering agent (intent-specific question templates) — done 2026-08-28
+- [x] T3.6 Entity extractor (herbs, jurisdictions, IP types) — done 2026-08-28
 
 ### Phase 4 — Reasoning & trust layer
 - [ ] T4.1 Query pipeline (intent-first agentic pipeline, parallel retrieval, synthesis)
