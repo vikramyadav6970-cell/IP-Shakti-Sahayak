@@ -10,9 +10,44 @@ entrypoint). Populate as you go — don't make backend guess your function shape
 
 *(none finalized yet — populate as they're built, e.g.:)*
 ```
-# example of what an entry here should look like once real:
-# ingest_document(document_version_id: str, storage_key: str) -> IngestResult
-# query(question: str, jurisdiction: str, language: str) -> QueryResult
+@celery_app.task(name="ai.tasks.ingest_document")
+def ingest_document(version_id: str):
+    # Retrieve DocumentVersion from Supabase, fetch raw file from Storage using `storage_key`,
+    # chunk and embed into Qdrant collection based on `corpus_collection`,
+    # and update DocumentVersion.ingestion_status in Postgres.
+    pass
+
+# Mocked (Backend T3.1) — wait for AI Phase 3 for exact implementation details
+# This runs synchronously in the FastAPI service layer (not celery)
+def query_pipeline(
+    question: str, 
+    domain_intent: str, 
+    jurisdiction: str, 
+    language: str, 
+    context_object: dict | None, 
+    entity_set: dict | None
+) -> dict:
+    """
+    Returns:
+    {
+      "answer": str,
+      "confidence": float,
+      "confidence_label": str,
+      "classification": str,
+      "requires_human_review": bool,
+      "citations": [
+        {
+          "document_title": str,
+          "corpus_collection": str,
+          "jurisdiction": str,
+          "document_type": str,
+          "section_ref": str,
+          "source_url": str
+        }
+      ]
+    }
+    """
+    pass
 ```
 
 ---

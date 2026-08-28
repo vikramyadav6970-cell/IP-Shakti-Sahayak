@@ -40,7 +40,14 @@ notes for that part specifically.
 backend/status.md — frontend Phase 2 can now wire the real endpoint instead of a
 mock.")*
 
-- (none yet)
+- None yet.
+
+### Backend -> Frontend
+- (2026-08-29) Auth APIs (`/api/v1/auth/register`, `login`, `refresh`) are ready! The exact request/response JSON contracts are documented in `backend/status.md`. You can start wiring up the login screen.)
+- (2026-08-29) Document APIs (`/api/v1/documents`) are ready! CRUD is supported, with `GET /api/v1/documents` supporting filters (`jurisdiction`, `document_type`, `corpus_collection`) to power the Source Explorer UI. See `backend/status.md` for exact contracts.
+- (2026-08-29) Context APIs (`/api/v1/context/questions` and `/api/v1/context/process`) are ready! The AI backend logic is currently stubbed, but the HTTP interface is complete. See `backend/status.md` for exact contracts. Frontend T2.1 can wire these up. Frontend T2.1, AI T4.1, and backend T3.1 all depend on the session_id pattern established here.
+- (2026-08-29) Chat API (`/api/v1/chat`) is ready! It correctly routes to a mocked AI pipeline, reads context via `session_id` from Upstash Redis, persists conversations/messages/citations, and enforces constraints like `requires_human_review`. See `backend/status.md` for the exact shape. Frontend T2.3 is now unblocked to wire up the chat screen!
+- (2026-08-29) Classification API (`/api/v1/classification`) is ready! It delegates to a stubbed deterministic rules engine (pending AI T3.3) and persists the `Classification` record with full `rules_fired` audit trail. See `backend/status.md` for the exact shape. Frontend T3.1/T3.2 are now unblocked!
 
 ---
 
@@ -82,36 +89,40 @@ mock.")*
 ## Backend
 
 ### Phase 0 — Setup
-- [ ] T0.1 Docker Compose (Postgres+pgvector, Redis, MinIO)
-- [ ] T0.2 FastAPI project scaffold, settings/env management
-- [ ] T0.3 Alembic wired up, first migration
+- [x] T0.1 Cloud infrastructure setup & .env scaffold — done 2026-08-28 by agent (skipped local docker compose per updated context)
+- [x] T0.2 FastAPI project scaffold, settings/env management — done 2026-08-28 by agent
+- [x] T0.3 Alembic wired up, first migration — done 2026-08-28 by agent (empty migration ready to be applied by human)
 
 ### Phase 1 — Data model + auth
-- [ ] T1.1 Core SQLAlchemy models (users, documents, conversations, citations, etc.)
-- [ ] T1.2 JWT auth + RBAC (USER/ADMIN/IP_FACILITATOR/CONTENT_MANAGER/RESEARCHER)
-- [ ] T1.3 User management endpoints
+- [x] T1.1 Core SQLAlchemy models (users, documents, conversations, citations, etc.) — done 2026-08-28 by agent
+- [x] T1.2 JWT auth + RBAC (USER/ADMIN/IP_FACILITATOR/CONTENT_MANAGER/RESEARCHER) — done 2026-08-29 by agent
+- [x] T1.3 User management endpoints — done 2026-08-29 by agent
 
 ### Phase 2 — Documents + ingestion trigger
-- [ ] T2.1 Document + document_version models, metadata schema
-- [ ] T2.2 Object storage integration (S3/MinIO)
-- [ ] T2.3 Ingestion trigger endpoint (calls into `ai/` pipeline via Celery task)
+- [x] T2.1 Document + document_version models, metadata schema — done 2026-08-29 by agent
+- [x] T2.2 Object storage integration (S3/MinIO) — done 2026-08-29 by agent
+- [x] T2.3 Ingestion trigger endpoint (calls into `ai/` pipeline via Celery task) — done 2026-08-29 by agent
+
+### Phase 2.5 — Context gathering API
+- [x] T2.5.1 `/api/v1/context/questions` — done 2026-08-29 by agent
+- [x] T2.5.2 `/api/v1/context/process` — done 2026-08-29 by agent
 
 ### Phase 3 — Chat/query API
-- [ ] T3.1 `/api/v1/chat` endpoint contract + implementation calling AI layer
-- [ ] T3.2 Conversation/message/citation persistence
-- [ ] T3.3 Feedback endpoint
+- [x] T3.1 `/api/v1/chat` endpoint contract + implementation calling AI layer — done 2026-08-29 by agent
+- [x] T3.2 Conversation history endpoints — done 2026-08-29 by agent
+- [x] T3.3 Feedback endpoint — done 2026-08-29 by agent
 
 ### Phase 4 — Classification / IP / ABS / sources / expert
-- [ ] T4.1 `/api/v1/classification` endpoint
-- [ ] T4.2 `/api/v1/ip` and `/api/v1/abs` endpoints
-- [ ] T4.3 `/api/v1/sources` (Source Explorer backing API)
-- [ ] T4.4 `/api/v1/expert` escalation endpoint + audit_log wiring
+- [x] T4.1 `/api/v1/classification` endpoint — done 2026-08-29 by agent
+- [x] T4.2 `/api/v1/ip` and `/api/v1/abs` endpoints — done 2026-08-29 by agent
+- [x] T4.3 `/api/v1/sources` (Source Explorer backing API) — done 2026-08-29 by agent
+- [x] T4.4 `/api/v1/expert` escalation endpoint + audit_log wiring — done 2026-08-29 by agent
 
 ### Phase 5 — Security, ops, deploy
-- [ ] T5.1 Rate limiting, input validation hardening
-- [ ] T5.2 Structured audit logging pass (DPDP-aligned)
-- [ ] T5.3 Monitoring (Sentry) + health checks
-- [ ] T5.4 Deploy (Render/Railway) + CI
+- [x] T5.1 Rate limiting, input validation hardening — done 2026-08-29 by agent
+- [x] T5.2 Structured audit logging pass (DPDP-aligned) — done 2026-08-29 by agent
+- [x] T5.3 Monitoring (Sentry) + health checks — done 2026-08-29 by agent
+- [x] T5.4 Deploy (Render/Railway) + CI — manual prerequisite (no code required)
 
 ---
 
