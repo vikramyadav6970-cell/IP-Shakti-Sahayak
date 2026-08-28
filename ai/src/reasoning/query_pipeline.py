@@ -137,10 +137,24 @@ class QueryPipeline:
     ) -> QueryResult:
         """Top-level pipeline entrypoint called by backend /api/v1/chat."""
         start_time = time.perf_counter()
+        active_llm = llm_provider or self.llm_provider
+        try:
+            if not active_llm:
+                active_llm = get_llm_provider()
+        except Exception:
+            active_llm = None
+
+        # STEP 0: Multilingual Input Translation (Rule 15)
+        is_hindi = language.lower().startswith("hi")
+        working_question = question
+        if is_hindi:
+            from src.multilingual.bhashini_client import translate_text
+            trans_res = await translate_text(question, source_language="hi", target_language="en", llm_provider=active_llm)
+            working_question = trans_res.translated_text
 
         # STEP 1: Jurisdiction resolution
         jurisdiction_result: JurisdictionClassificationResult = classify_jurisdiction(
-            question=question,
+            question=working_question,
             ui_selected_jurisdiction=jurisdiction,
         )
         effective_jurisdiction = jurisdiction_result.effective_jurisdiction
@@ -148,13 +162,13 @@ class QueryPipeline:
 
         # STEP 2: Intent classification & collection routing
         intent_result: IntentClassificationResult = classify_intent(
-            question=question,
+            question=working_question,
             ui_domain_intent=domain_intent,
         )
         target_collections = intent_result.target_collections
 
         # STEP 3: Entity extraction
-        entity_set: EntitySet = extract_entities(context=context, question=question)
+        entity_set: EntitySet = extract_entities(context=context, question=working_question)
 
         # STEP 3b: Optional statutory rules engines (Product / ABS)
         product_classification = None
@@ -268,17 +282,26 @@ class QueryPipeline:
                 fine_grained_intents=intent_result.fine_grained_intents,
             )
 
-        # STEP 7: LLM synthesis
-        active_llm = llm_provider or self.llm_provider or get_llm_provider()
-        raw_answer, raw_citations = await self._synthesize_answer(
-            llm=active_llm,
-            question=question,
-            domain_intent=intent_result.domain_intent,
-            entity_set=entity_set,
-            sub_tasks=sub_tasks,
-            evidence_chunks=evidence_chunks,
-            language=language,
-        )
+        # STEP 7: Answer synthesis (TKDL deterministic template vs. grounded LLM synthesis)
+        if FineGrainedIntent.TKDL in intent_result.fine_grained_intents or "tkdl" in working_question.lower():
+            from src.reasoning.tkdl_pointer import generate_tkdl_response
+            tkdl_resp = generate_tkdl_response(
+                question=question,
+                evidence_chunks=evidence_chunks,
+                language=language,
+            )
+            raw_answer = tkdl_resp.answer
+            raw_citations = tkdl_resp.citations
+        else:
+            raw_answer, raw_citations = await self._synthesize_answer(
+                llm=active_llm,
+                question=question,
+                domain_intent=intent_result.domain_intent,
+                entity_set=entity_set,
+                sub_tasks=sub_tasks,
+                evidence_chunks=evidence_chunks,
+                language=language,
+            )
 
         # STEP 8: Citation validation (zero-hallucination check)
         from src.citations.validator import validate_citations
@@ -321,6 +344,11 @@ class QueryPipeline:
             confidence = 0.0
             confidence_label = "ABSTAIN"
             requires_human_review = True
+        elif is_hindi:
+            # STEP 10b: Translate synthesized final answer to Hindi (protecting citations)
+            from src.multilingual.bhashini_client import translate_text
+            hindi_trans = await translate_text(final_answer, source_language="en", target_language="hi", llm_provider=active_llm)
+            final_answer = hindi_trans.translated_text
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
 

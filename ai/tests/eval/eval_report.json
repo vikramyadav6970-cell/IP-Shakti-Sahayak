@@ -1,0 +1,265 @@
+{
+  "total_questions": 25,
+  "collection_routing_accuracy": 1.0,
+  "context_gathering_accuracy": 1.0,
+  "retrieval_accuracy": 0.0,
+  "sub_task_decomposition_accuracy": 1.0,
+  "citation_accuracy": 1.0,
+  "answer_accuracy": 0.1026,
+  "abstention_accuracy": 1.0,
+  "multilingual_quality": 1.0,
+  "overall_score": 0.6654,
+  "duration_seconds": 41.49,
+  "item_results": [
+    {
+      "id": "q_pat_001",
+      "question": "Can I patent a formulation containing standard Ashwagandha a",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_002",
+      "question": "What disclosure is required under Indian patent law if my in",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_003",
+      "question": "How does Section 3(d) of the Indian Patents Act apply to imp",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_004",
+      "question": "Is a novel extraction process for isolation of withanolides ",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_005",
+      "question": "Does combining Tulsi and Ginger require demonstrating synerg",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_006",
+      "question": "Can an applicant obtain a patent for an Ayurvedic formulatio",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_007",
+      "question": "What is the penalty for wrongful failure to disclose biologi",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.11,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_008",
+      "question": "Are synthetic derivatives of curcumin patentable if they exh",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_009",
+      "question": "When is NBA approval required in relation to filing an India",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_010",
+      "question": "Can an individual claim patent rights over a single wild her",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_011",
+      "question": "Can I patent a novel nanoparticle drug delivery system for d",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_012",
+      "question": "What role does TKDL play in Indian Patent Office examination",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_013",
+      "question": "Is a method of treating arthritis using an Ayurvedic decocti",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_014",
+      "question": "What is required to overcome a Section 3(e) objection for a ",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_015",
+      "question": "Can foreign entities apply for Indian patents based on India",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_016",
+      "question": "How are isolated plant DNA sequences treated under Indian pa",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_017",
+      "question": "Does the 2023 Biodiversity Amendment exempt Indian AYUSH pra",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.14,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_018",
+      "question": "Is patent term extension available for herbal pharmaceutical",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_019",
+      "question": "What constitutes prior art for Ayurvedic herbal inventions i",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_020",
+      "question": "Can I patent an automated robotic machine that manufactures ",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_021",
+      "question": "What is the consequence of failing to deposit biological mat",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.11,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_022",
+      "question": "Can I obtain a divisional patent application for an isolated",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_023",
+      "question": "Are diagnostic kits using herbal biomarkers patentable in In",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_024",
+      "question": "Does filing a provisional patent application protect my herb",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    },
+    {
+      "id": "q_pat_025",
+      "question": "What constitutes commercial exploitation requiring NBA benef",
+      "intent": "PATENT",
+      "routing_passed": true,
+      "decomp_passed": true,
+      "confidence_label": "ABSTAIN",
+      "answer_overlap_score": 0.1,
+      "citations_count": 0
+    }
+  ]
+}

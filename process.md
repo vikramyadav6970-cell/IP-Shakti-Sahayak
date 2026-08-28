@@ -147,7 +147,7 @@ notes for that part specifically.
 - [x] T4.4 Abstention/guardrail rules (hallucination protection, TKDL pointer) — done 2026-08-28
 
 ### Phase 5 — Multilingual, evaluation, stretch
-- [ ] T5.1 Hindi support via Bhashini (ASR/translation/TTS)
-- [ ] T5.2 Evaluation harness (RAGAS) + 100-question eval set
-- [ ] T5.3 TKDL public-information pointer integration
-- [ ] T5.4 (stretch) Knowledge graph (Neo4j AuraDB)
+- [x] T5.1 Hindi support via Bhashini (ULCA API wrapper + LLM translation fallback, citation protection) — done 2026-08-28
+- [x] T5.2 Evaluation harness (100-question eval set + 8-dimension benchmark runner) — done 2026-08-28
+- [x] T5.3 TKDL public-information pointer integration — done 2026-08-28
+- [x] T5.4 (stretch) Knowledge graph (Neo4j AuraDB & multi-hop engine) — done 2026-08-28

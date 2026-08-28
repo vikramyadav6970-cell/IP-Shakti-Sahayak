@@ -80,8 +80,9 @@ class CitationValidator:
                 if not sentence.strip():
                     continue
 
-                # Find all [chunk_id] tags in this sentence
-                citation_tags = re.findall(r"\[([a-zA-Z0-9_\-\.\:\/]+)\]", sentence)
+                # Find all [chunk_id] tags in this sentence (ignoring markdown links with URLs)
+                raw_tags = re.findall(r"\[([a-zA-Z0-9_\-\.\:\/]+)\](?!\()", sentence)
+                citation_tags = [t for t in raw_tags if not t.startswith("http://") and not t.startswith("https://")]
 
                 if not citation_tags:
                     # Sentence without citations (e.g. headings, bullet points, disclaimers)

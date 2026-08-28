@@ -1,4 +1,4 @@
-"""Reasoning module — LLM provider abstraction, query decomposer, query pipeline, answer generator."""
+"""Reasoning module — LLM provider abstraction, query decomposer, query pipeline, answer generator, TKDL pointer."""
 
 from src.reasoning.llm_provider import (
     LLMProvider,
@@ -14,6 +14,10 @@ from src.reasoning.query_pipeline import (
     QueryPipeline,
     query,
 )
+from src.reasoning.tkdl_pointer import (
+    TKDLResponse,
+    generate_tkdl_response,
+)
 
 __all__ = [
     "LLMProvider",
@@ -26,4 +30,6 @@ __all__ = [
     "QueryResult",
     "QueryPipeline",
     "query",
+    "TKDLResponse",
+    "generate_tkdl_response",
 ]
