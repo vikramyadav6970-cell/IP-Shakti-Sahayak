@@ -1,0 +1,3 @@
+# Context question templates — one YAML file per UI intent.
+# See ai/coding_conventions.md rule 14: these are versioned code, not LLM-generated.
+# Loaded by src/context_gathering/agent.py at startup.

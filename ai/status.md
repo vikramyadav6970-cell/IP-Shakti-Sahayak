@@ -36,12 +36,31 @@ data/corpus/manifest.md linked from here)*
 
 ## Log
 
-### (seed dataset added \u2014 no other work done yet)
+### T0.2 — LLM provider abstraction (2026-08-28)
+Implemented `src/reasoning/llm_provider.py`:
+- `LLMProvider` abstract base class with sync `generate()` and async `generate_async()`.
+- Concrete implementations:
+  - `GeminiProvider`: Supports modern `google-genai` SDK, legacy `google.generativeai`, and direct REST API fallback.
+  - `OpenAIProvider`: Supports standard and async `openai` SDK.
+  - `AnthropicProvider`: Supports standard and async `anthropic` SDK.
+- Factory `get_llm_provider(provider, model, api_key)` reading env vars `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`.
+- Test suite in `ai/tests/test_reasoning.py` verified with mock parameter tests and live smoke test.
+Next task: Phase 0, T0.3 (`src/embeddings/embedding_provider.py`).
+
+### T0.1 — Project scaffold & cloud env setup (2026-08-28)
+Scaffolded the `ai/` project:
+- Created `ai/.env.example` with clear instructions & signup links for Qdrant Cloud, Supabase Postgres, Upstash Redis, LLM providers (Gemini/OpenAI/Anthropic), Cohere rerank (optional), and Neo4j AuraDB (optional).
+- Created `ai/requirements.txt` with exact pinned dependencies.
+- Created `ai/pytest.ini` with test paths and smoke/slow markers.
+- Created `ai/src/` modular layout: `config.py` (pydantic-settings), `ingestion`, `embeddings`, `retrieval`, `classification`, `context_gathering`, `entity_extraction`, `abs`, `reasoning`, `citations`, `confidence`, `guardrails`, `multilingual`, `evaluation`, and versioned `prompts/`.
+- Created `ai/tests/` skeleton with `test_config.py` passing unit checks.
+
+### (seed dataset added — prior work)
 Added `ai/data/corpus/seed/` (verified legal_knowledge, ipr_prior_art, ayush_tk
 records + loader script) and `ai/tests/eval/questions_seed.jsonl` in response to
 a request to build an embeddable dataset. Every record carries a
 `verification_status` field distinguishing verified-facts-paraphrased-text from
-verified-core-facts-some-fields-unconfirmed \u2014 read `ai/data/corpus/seed/README.md`
+verified-core-facts-some-fields-unconfirmed — read `ai/data/corpus/seed/README.md`
 before treating any of it as citation-ready without the flagged confirmations.
 Next task: Phase 0, T0.1 in `prompts/phases.md` (or run `load_seed.py` once T0.3's
 embedding setup exists, to fast-track a working retrieval demo on real content).

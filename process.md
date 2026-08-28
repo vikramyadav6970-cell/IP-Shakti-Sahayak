@@ -118,34 +118,36 @@ mock.")*
 ## AI layer
 
 ### Phase 0 — Setup
-- [ ] T0.1 Python project scaffold + dependency pinning
-- [ ] T0.2 LLM provider abstraction (env-driven key)
-- [ ] T0.3 Embedding model selection + smoke test
+- [x] T0.1 Python project scaffold + cloud env setup (.env.example, requirements.txt, pytest.ini, src/ skeleton) — done 2026-08-28
+- [x] T0.2 LLM provider abstraction (env-driven key, Gemini/OpenAI/Anthropic) — done 2026-08-28
+- [ ] T0.3 Embedding model selection + smoke test (BAAI/bge-m3)
 
 ### Phase 1 — Corpus + ingestion
-- [ ] T1.1 Curate initial 20–50 document corpus (India, Patent+Trademark+ABS focus)
+- [ ] T1.1 Curate initial 20–50 document corpus across 5 collection types
 - [ ] T1.2 Parsing pipeline (PDF/HTML → structured text)
-- [ ] T1.3 Structure-aware chunking (Act → Chapter → Section → Clause)
+- [ ] T1.3 Collection-aware chunking (5 distinct chunking strategies)
 
 ### Phase 2 — Retrieval
-- [ ] T2.1 Embedding generation + pgvector indexing
-- [ ] T2.2 BM25/keyword index
-- [ ] T2.3 Hybrid retrieval + reranker
+- [ ] T2.1 Embedding generation + Qdrant Cloud indexing (5 collections)
+- [ ] T2.2 BM25 keyword index (rank_bm25)
+- [ ] T2.3 Hybrid retrieval + reranker (asyncio parallel multi-collection)
 
-### Phase 3 — Classification & routing
+### Phase 3 — Classification, context gathering & entity extraction
 - [ ] T3.1 Jurisdiction classifier
-- [ ] T3.2 Intent classifier (Patent/Trademark/GI/ABS/etc.)
+- [ ] T3.2 Two-level intent classifier (UI domain intent + fine-grained intent)
 - [ ] T3.3 Deterministic product classification rules engine
 - [ ] T3.4 ABS assessment engine
+- [ ] T3.5 Context gathering agent (intent-specific question templates)
+- [ ] T3.6 Entity extractor (herbs, jurisdictions, IP types)
 
 ### Phase 4 — Reasoning & trust layer
-- [ ] T4.1 LLM reasoning prompt + evidence-only answer generation
+- [ ] T4.1 Query pipeline (intent-first agentic pipeline, parallel retrieval, synthesis)
 - [ ] T4.2 Citation validator (rejects unsupported citations)
-- [ ] T4.3 Composite confidence scorer
-- [ ] T4.4 Abstention/guardrail rules (hallucination protection)
+- [ ] T4.3 Composite confidence scorer (with sub-task coverage)
+- [ ] T4.4 Abstention/guardrail rules (hallucination protection, TKDL pointer)
 
 ### Phase 5 — Multilingual, evaluation, stretch
 - [ ] T5.1 Hindi support via Bhashini (ASR/translation/TTS)
 - [ ] T5.2 Evaluation harness (RAGAS) + 100-question eval set
 - [ ] T5.3 TKDL public-information pointer integration
-- [ ] T5.4 (stretch) Knowledge graph (Neo4j), agentic multi-step orchestration
+- [ ] T5.4 (stretch) Knowledge graph (Neo4j AuraDB)
