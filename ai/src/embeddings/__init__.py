@@ -5,9 +5,15 @@ from src.embeddings.embedding_provider import (
     BGEM3EmbeddingProvider,
     get_embedding_provider,
 )
+from src.embeddings.indexer import (
+    QdrantIndexer,
+    ALL_COLLECTIONS,
+)
 
 __all__ = [
     "EmbeddingProvider",
     "BGEM3EmbeddingProvider",
     "get_embedding_provider",
+    "QdrantIndexer",
+    "ALL_COLLECTIONS",
 ]

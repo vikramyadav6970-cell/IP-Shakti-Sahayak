@@ -8,11 +8,16 @@ entrypoint). Populate as you go — don't make backend guess your function shape
 
 ## Interfaces backend depends on
 
-*(none finalized yet — populate as they're built, e.g.:)*
-```
-# example of what an entry here should look like once real:
-# ingest_document(document_version_id: str, storage_key: str) -> IngestResult
-# query(question: str, jurisdiction: str, language: str) -> QueryResult
+```python
+# T2.3 Core Multi-Collection Retrieval Primitive (async for parallel sub-task execution):
+from src.retrieval.hybrid_retriever import EvidenceChunk, retrieve
+
+async def retrieve(
+    query: str,
+    collections: list[str],
+    jurisdiction: str,        # HARD filter at Qdrant query level: "INDIA" | "INTERNATIONAL" | "EU" | "USA"
+    top_k: int = 8,
+) -> list[EvidenceChunk]
 ```
 
 ---
@@ -27,9 +32,51 @@ Full authoritative manifest created at [`ai/data/corpus/manifest.md`](data/corpu
   - `international_export` (8 documents): WTO TRIPS Agreement (Art 27, 28, 29), CBD 1992 (Art 8(j), 15), Nagoya Protocol 2010, WIPO GRATK Treaty 2024 (Art 3 mandatory genetic resource disclosure), EU THMPD Directive 2004/24/EC, EU Food Supplement Regulation (EC) 1924/2006, US DSHEA 1994 / 21 CFR 111, CITES Appendices on medicinal plants.
   - `case_law_prior_art` (3 dossiers): Landmark CSIR/India TKDL revocation dossiers (Turmeric US 5,401,504, Neem EPO 0436257, Basmati US 5,663,484).
 
+## Qdrant Payload Schemas per Collection
+
+All 5 collections created on Qdrant Cloud with `vector_size=1024`, `distance=Cosine`.
+Payload fields are stored directly at the top level for efficient metadata filtering:
+
+1. **`legal_statutory`**:
+   `{ chunk_id: str, document_id: str, corpus_collection: "legal_statutory", text: str, token_count: int, jurisdiction: "INDIA", act: str, chapter: str, section: str | null, subsection: str | null, document_version: str, authority: str }`
+2. **`standards_formulations`**:
+   `{ chunk_id: str, document_id: str, corpus_collection: "standards_formulations", text: str, token_count: int, jurisdiction: "INDIA", source: str, monograph_id: str, formulation_name: str, botanical_name: str | null, substance_type: str, parent_chunk_id: str | null }`
+3. **`case_law_prior_art`**:
+   `{ chunk_id: str, document_id: str, corpus_collection: "case_law_prior_art", text: str, token_count: int, jurisdiction: str, case_name: str, court: str, year: str, citation_ref: str, paragraph_index: int }`
+4. **`procedural_forms`**:
+   `{ chunk_id: str, document_id: str, corpus_collection: "procedural_forms", text: str, token_count: int, jurisdiction: "INDIA", form_name: str, section_heading: str, authority: str, governing_law: str }`
+5. **`international_export`**:
+   `{ chunk_id: str, document_id: str, corpus_collection: "international_export", text: str, token_count: int, jurisdiction: "INTERNATIONAL" | "EU" | "USA", treaty_name: str, article_number: str | null, paragraph: str | null, authority: str }`
+
 ---
 
 ## Log
+
+### T2.3 — Hybrid retrieval + reranking (2026-08-28)
+Implemented `src/retrieval/hybrid_retriever.py`:
+- `HybridRetriever` and `async def retrieve(query, collections, jurisdiction, top_k)` primitive.
+- Hard jurisdiction filter applied directly at the Qdrant query level (`models.Filter(must=[FieldCondition(key="jurisdiction", match=...)])`).
+- Reciprocal Rank Fusion (RRF with $k=60$) combining Qdrant dense vector search and BM25 sparse keyword search across specified collections.
+- Optional Cohere Rerank (`rerank-v3.5`) support with graceful RRF passthrough fallback.
+- Tested in `ai/tests/test_retrieval.py`:
+  - Verified `jurisdiction="INDIA"` never leaks `jurisdiction="USA"` chunks.
+  - Verified `asyncio.gather()` parallel sub-task retrieval across multiple collections (`legal_statutory`, `standards_formulations`).
+Next task: Phase 3, T3.1 (`src/classification/jurisdiction_classifier.py`).
+
+### T2.2 — BM25 keyword search index (2026-08-28)
+Implemented `src/retrieval/keyword_search.py`:
+- `legal_tokenize()` preserving legal section references (`Section 3(p)`, `10(4)(d)(ii)`, `27.3(b)`), botanical names, and Devanagari Hindi tokens.
+- `BM25Index` wrapping `rank_bm25` (BM25Plus) with `build_index()`, `load_index()`, and `search(query, collection, top_k)`.
+- Full persistence to disk via pickle serialization.
+- Verified in `ai/tests/test_retrieval.py` that "Section 3(p)" queries cleanly retrieve Section 3(p) chunks with highest relevance score, and collection filtering works correctly.
+Next task: Phase 2, T2.3 (`src/retrieval/hybrid_retriever.py`).
+
+### T2.1 — Embedding generation + Qdrant Cloud indexing (2026-08-28)
+Implemented `src/embeddings/indexer.py`:
+- `QdrantIndexer` class with `ensure_collections()`, `index_chunks()`, `search()`, and `get_collection_stats()`.
+- Provisioned all 5 collections (`legal_statutory`, `standards_formulations`, `case_law_prior_art`, `procedural_forms`, `international_export`) on live Qdrant Cloud cluster with 1024-dim Cosine vectors.
+- Verified batch embedding with `BAAI/bge-m3` and payload metadata flattening across multiple collections in `ai/tests/test_embeddings.py` (100% pass).
+Next task: Phase 2, T2.2 (`src/retrieval/bm25_search.py`).
 
 ### T1.3 — Collection-aware chunking (2026-08-28)
 Implemented `src/ingestion/chunker.py`:

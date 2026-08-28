@@ -1,14 +1,19 @@
-"""Unit and smoke tests for the Embedding Provider (BAAI/bge-m3)."""
+"""Unit and smoke tests for the Embedding Provider and Qdrant Indexer."""
 
 from unittest.mock import MagicMock, patch
+import os
 import pytest
 import numpy as np
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Distance, VectorParams
 
 from src.embeddings.embedding_provider import (
     EmbeddingProvider,
     BGEM3EmbeddingProvider,
     get_embedding_provider,
 )
+from src.embeddings.indexer import QdrantIndexer, ALL_COLLECTIONS
+from src.ingestion.chunker import Chunk
 
 
 def test_embedding_provider_factory():
@@ -24,7 +29,6 @@ def test_embed_mock():
     provider = BGEM3EmbeddingProvider(model_name="BAAI/bge-m3", dimension=1024)
 
     mock_model = MagicMock()
-    # Mock return 2 vectors of length 1024
     dummy_vectors = np.ones((2, 1024), dtype=np.float32)
     mock_model.encode.return_value = dummy_vectors
 
@@ -37,7 +41,6 @@ def test_embed_mock():
         assert len(embeddings[1]) == 1024
         assert all(isinstance(val, float) for val in embeddings[0])
 
-        # Test single query embedding
         query_vec = provider.embed_query("Patent analysis")
         assert len(query_vec) == 1024
 
@@ -48,16 +51,101 @@ def test_embed_empty_list():
     assert provider.embed([]) == []
 
 
+def test_qdrant_ensure_collections():
+    """QdrantIndexer should create all 5 named collections in memory with 1024 dimension."""
+    client = QdrantClient(":memory:")
+    mock_embedder = MagicMock(spec=EmbeddingProvider)
+    mock_embedder.dimension = 1024
+
+    indexer = QdrantIndexer(client=client, embedding_provider=mock_embedder, dimension=1024)
+    confirmed = indexer.ensure_collections()
+
+    assert set(confirmed) == set(ALL_COLLECTIONS)
+
+    existing = [c.name for c in client.get_collections().collections]
+    for col in ALL_COLLECTIONS:
+        assert col in existing
+        info = client.get_collection(col)
+        assert info.config.params.vectors.size == 1024
+        assert info.config.params.vectors.distance == Distance.COSINE
+
+
+def test_qdrant_index_chunks_across_multiple_collections():
+    """QdrantIndexer should route chunks to correct collections and preserve payload metadata."""
+    client = QdrantClient(":memory:")
+    mock_embedder = MagicMock(spec=EmbeddingProvider)
+    mock_embedder.dimension = 1024
+    # Mock return 1024-dim unit vector
+    mock_embedder.embed.side_effect = lambda texts: [[0.1] * 1024 for _ in texts]
+
+    indexer = QdrantIndexer(client=client, embedding_provider=mock_embedder, dimension=1024)
+
+    # 3 mock chunks across 2 collections
+    chunks = [
+        Chunk(
+            chunk_id="doc_patents#sec_3_p",
+            document_id="doc_patents",
+            corpus_collection="legal_statutory",
+            text="Section 3(p) excludes traditional knowledge from patentability.",
+            token_count=10,
+            jurisdiction="INDIA",
+            metadata={"act": "Patents Act 1970", "section": "3", "subsection": "p"},
+        ),
+        Chunk(
+            chunk_id="doc_patents#sec_10_4",
+            document_id="doc_patents",
+            corpus_collection="legal_statutory",
+            text="Section 10(4)(d)(ii) requires mandatory source disclosure of biological material.",
+            token_count=12,
+            jurisdiction="INDIA",
+            metadata={"act": "Patents Act 1970", "section": "10", "subsection": "4"},
+        ),
+        Chunk(
+            chunk_id="doc_api#ashwagandha",
+            document_id="doc_api",
+            corpus_collection="standards_formulations",
+            text="Ashwagandha consists of dried roots of Withania somnifera Dunal.",
+            token_count=11,
+            jurisdiction="INDIA",
+            metadata={
+                "monograph_id": "api_001",
+                "formulation_name": "Ashwagandha",
+                "botanical_name": "Withania somnifera Dunal.",
+                "substance_type": "SINGLE_HERB",
+            },
+        ),
+    ]
+
+    res = indexer.index_chunks(chunks)
+
+    assert res["legal_statutory"] == 2
+    assert res["standards_formulations"] == 1
+
+    # Search in legal_statutory and verify payload
+    legal_results = indexer.search(
+        collection_name="legal_statutory",
+        query_vector=[0.1] * 1024,
+        limit=5,
+    )
+    assert len(legal_results) == 2
+    sections = [p.payload["section"] for p in legal_results]
+    assert "3" in sections
+    assert "10" in sections
+
+    # Search in standards_formulations and verify botanical metadata
+    herbal_results = indexer.search(
+        collection_name="standards_formulations",
+        query_vector=[0.1] * 1024,
+        limit=5,
+    )
+    assert len(herbal_results) == 1
+    assert herbal_results[0].payload["botanical_name"] == "Withania somnifera Dunal."
+
+
 @pytest.mark.smoke
 @pytest.mark.slow
 def test_bge_m3_live_smoke():
-    """Live smoke test embedding an English and Hindi sentence with real BAAI/bge-m3 model.
-
-    Asserts:
-    1. Vector dimensionality is exactly 1024.
-    2. Output vectors are not all-zero.
-    3. Both English and Hindi texts produce valid normalized vectors.
-    """
+    """Live smoke test embedding an English and Hindi sentence with real BAAI/bge-m3 model."""
     try:
         import sentence_transformers
     except ImportError:
@@ -70,20 +158,22 @@ def test_bge_m3_live_smoke():
 
     embeddings = provider.embed([english_text, hindi_text])
 
-    assert len(embeddings) == 2, "Expected 2 embedding vectors for 2 input sentences."
+    assert len(embeddings) == 2
+    assert len(embeddings[0]) == 1024
+    assert len(embeddings[1]) == 1024
+    assert any(abs(val) > 1e-6 for val in embeddings[0])
+    assert any(abs(val) > 1e-6 for val in embeddings[1])
 
-    en_vec = embeddings[0]
-    hi_vec = embeddings[1]
 
-    # Assert exact dimension is 1024
-    assert len(en_vec) == 1024, f"Expected 1024 dimension for English vector, got {len(en_vec)}"
-    assert len(hi_vec) == 1024, f"Expected 1024 dimension for Hindi vector, got {len(hi_vec)}"
+@pytest.mark.smoke
+def test_qdrant_cloud_live_provisioning():
+    """Live smoke test verifying connection and collection provisioning on Qdrant Cloud cluster."""
+    url = os.getenv("QDRANT_URL")
+    key = os.getenv("QDRANT_API_KEY")
 
-    # Assert vectors are not all-zero
-    assert any(abs(val) > 1e-6 for val in en_vec), "English embedding vector must not be all-zero."
-    assert any(abs(val) > 1e-6 for val in hi_vec), "Hindi embedding vector must not be all-zero."
+    if not url or not key or "your-cluster" in url:
+        pytest.skip("No real QDRANT_URL / QDRANT_API_KEY configured; skipping cloud test.")
 
-    # Single query method test
-    query_vec = provider.embed_query(english_text)
-    assert len(query_vec) == 1024
-    assert any(abs(val) > 1e-6 for val in query_vec)
+    indexer = QdrantIndexer(url=url, api_key=key, dimension=1024)
+    confirmed = indexer.ensure_collections()
+    assert set(confirmed) == set(ALL_COLLECTIONS)

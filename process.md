@@ -123,9 +123,9 @@ notes for that part specifically.
 - [x] T1.3 Collection-aware chunking (5 distinct chunking strategies) — done 2026-08-28
 
 ### Phase 2 — Retrieval
-- [ ] T2.1 Embedding generation + Qdrant Cloud indexing (5 collections)
-- [ ] T2.2 BM25 keyword index (rank_bm25)
-- [ ] T2.3 Hybrid retrieval + reranker (asyncio parallel multi-collection)
+- [x] T2.1 Embedding generation + Qdrant Cloud indexing (5 collections provisioned on cluster) — done 2026-08-28
+- [x] T2.2 BM25 keyword index (rank_bm25 with custom legal tokenizer) — done 2026-08-28
+- [x] T2.3 Hybrid retrieval + reranker (asyncio parallel multi-collection) — done 2026-08-28
 
 ### Phase 3 — Classification, context gathering & entity extraction
 - [ ] T3.1 Jurisdiction classifier
