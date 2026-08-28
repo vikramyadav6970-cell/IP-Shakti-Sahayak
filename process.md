@@ -118,9 +118,9 @@ notes for that part specifically.
 - [x] T0.3 Embedding model selection + smoke test (BAAI/bge-m3, 1024-dim) — done 2026-08-28
 
 ### Phase 1 — Corpus + ingestion
-- [ ] T1.1 Curate initial 20–50 document corpus across 5 collection types
-- [ ] T1.2 Parsing pipeline (PDF/HTML → structured text)
-- [ ] T1.3 Collection-aware chunking (5 distinct chunking strategies)
+- [x] T1.1 Curate initial 20–50 document corpus across 5 collection types (42 authoritative sources in manifest.md) — done 2026-08-28
+- [x] T1.2 Parsing pipeline (PDF/HTML/JSONL/text → structured ParsedDocument) — done 2026-08-28
+- [x] T1.3 Collection-aware chunking (5 distinct chunking strategies) — done 2026-08-28
 
 ### Phase 2 — Retrieval
 - [ ] T2.1 Embedding generation + Qdrant Cloud indexing (5 collections)
