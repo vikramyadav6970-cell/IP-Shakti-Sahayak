@@ -36,6 +36,15 @@ data/corpus/manifest.md linked from here)*
 
 ## Log
 
+### T0.3 — Embedding model smoke test (2026-08-28)
+Implemented `src/embeddings/embedding_provider.py`:
+- `EmbeddingProvider` abstract base class with batch `embed(texts)` and single-query `embed_query(text)`.
+- `BGEM3EmbeddingProvider` wrapping `BAAI/bge-m3` via `sentence-transformers` with normalized output embeddings.
+- Vector dimension is confirmed **1024** (multilingual dense embeddings, strong across Hindi + English).
+- Live smoke test in `ai/tests/test_embeddings.py` verified against real model with English and Hindi sentences.
+- **Cross-part note:** All 5 Qdrant Cloud collections in T2.1 must be created with `vector_size=1024` and `distance=Cosine`.
+Next task: Phase 1, T1.1 (Corpus curation manifest across 5 collections).
+
 ### T0.2 — LLM provider abstraction (2026-08-28)
 Implemented `src/reasoning/llm_provider.py`:
 - `LLMProvider` abstract base class with sync `generate()` and async `generate_async()`.

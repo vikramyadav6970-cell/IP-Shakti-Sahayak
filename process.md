@@ -35,12 +35,7 @@ notes for that part specifically.
 
 ## Cross-part notes
 
-*(Add short notes here when finishing something another part depends on — e.g.
-"Backend: POST /api/v1/chat request/response shape finalized, see
-backend/status.md — frontend Phase 2 can now wire the real endpoint instead of a
-mock.")*
-
-- (none yet)
+- **AI Layer / Embeddings (T0.3 — 2026-08-28):** Verified `BAAI/bge-m3` embedding model. Vector output dimensionality is **1024** (dense vectors, normalized). All 5 Qdrant Cloud collections in T2.1 and any vector schema in DB/backend must be configured with dimension = 1024, Cosine distance.
 
 ---
 
@@ -120,7 +115,7 @@ mock.")*
 ### Phase 0 — Setup
 - [x] T0.1 Python project scaffold + cloud env setup (.env.example, requirements.txt, pytest.ini, src/ skeleton) — done 2026-08-28
 - [x] T0.2 LLM provider abstraction (env-driven key, Gemini/OpenAI/Anthropic) — done 2026-08-28
-- [ ] T0.3 Embedding model selection + smoke test (BAAI/bge-m3)
+- [x] T0.3 Embedding model selection + smoke test (BAAI/bge-m3, 1024-dim) — done 2026-08-28
 
 ### Phase 1 — Corpus + ingestion
 - [ ] T1.1 Curate initial 20–50 document corpus across 5 collection types
