@@ -1,4 +1,4 @@
-"""Reasoning module — LLM provider abstraction, query decomposer, answer generator."""
+"""Reasoning module — LLM provider abstraction, query decomposer, query pipeline, answer generator."""
 
 from src.reasoning.llm_provider import (
     LLMProvider,
@@ -7,6 +7,13 @@ from src.reasoning.llm_provider import (
     AnthropicProvider,
     get_llm_provider,
 )
+from src.reasoning.query_pipeline import (
+    SubTask,
+    Citation,
+    QueryResult,
+    QueryPipeline,
+    query,
+)
 
 __all__ = [
     "LLMProvider",
@@ -14,4 +21,9 @@ __all__ = [
     "OpenAIProvider",
     "AnthropicProvider",
     "get_llm_provider",
+    "SubTask",
+    "Citation",
+    "QueryResult",
+    "QueryPipeline",
+    "query",
 ]

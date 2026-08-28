@@ -35,6 +35,11 @@ class EvidenceChunk:
     rrf_score: Optional[float] = None
     rerank_score: Optional[float] = None
 
+    @property
+    def payload(self) -> Dict[str, Any]:
+        """Convenience alias for metadata payload."""
+        return self.metadata
+
 
 class HybridRetriever:
     """Hybrid multi-collection retriever implementing Qdrant dense + BM25 sparse + RRF fusion."""

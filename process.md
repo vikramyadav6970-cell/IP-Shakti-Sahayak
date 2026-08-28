@@ -38,6 +38,7 @@ notes for that part specifically.
 - **Vector dimension:** EmbeddingProvider (BAAI/bge-m3) produces 1024-dim dense vectors. All 5 Qdrant Cloud collections in T2.1 are created with `vector_size=1024` and `distance=Cosine`.
 - **ContextObject schemas (Frontend T2.x/T3.x & Backend T1.x):** Frontend context-gathering UI and backend `/api/v1/context` endpoint must match the ContextObject schemas defined in `ai/status.md` and `src/context_gathering/agent.py` across all 6 domain intents (`BUSINESS`, `EXPORT`, `MEDICINAL`, `PATENT`, `RESEARCH`, `OTHER`).
 - **EntitySet schema (Backend T4.1):** `EntitySet` schema `{herbs: list[str], jurisdictions: list[str], ip_types: list[IPType], biological_resources: list[str], formulation_name: str | None, destination_country: str | None, regulatory_regime: str | None}` defined in `ai/status.md` and `src/entity_extraction/extractor.py`.
+- **QueryResult Schema (Backend /api/v1/chat & Frontend T2.1/T2.2):** Full response contract defined in `ai/status.md` and `src/reasoning/query_pipeline.py`. Contains `answer`, `confidence`, `confidence_label`, `classification`, `abs_assessment`, `citations`, `requires_human_review`, `sub_tasks_run` (for frontend evidence map), and `sources_by_collection`.
 - **Statutory Engines Available (Backend T4.1 / T4.2):** `classify_jurisdiction()`, `classify_intent()`, `classify_product()`, `assess_abs()`, and `extract_entities()` are fully tested and ready for backend query pipeline consumption.
 - **Frontend Isolation Rule:** Do not touch frontend files in this session as frontend is actively being worked on by the UI team.
 
@@ -140,10 +141,10 @@ notes for that part specifically.
 - [x] T3.6 Entity extractor (herbs, jurisdictions, IP types) — done 2026-08-28
 
 ### Phase 4 — Reasoning & trust layer
-- [ ] T4.1 Query pipeline (intent-first agentic pipeline, parallel retrieval, synthesis)
-- [ ] T4.2 Citation validator (rejects unsupported citations)
-- [ ] T4.3 Composite confidence scorer (with sub-task coverage)
-- [ ] T4.4 Abstention/guardrail rules (hallucination protection, TKDL pointer)
+- [x] T4.1 Query pipeline (intent-first agentic pipeline, parallel retrieval, synthesis) — done 2026-08-28
+- [x] T4.2 Citation validator (rejects unsupported citations) — done 2026-08-28
+- [x] T4.3 Composite confidence scorer (with sub-task coverage) — done 2026-08-28
+- [x] T4.4 Abstention/guardrail rules (hallucination protection, TKDL pointer) — done 2026-08-28
 
 ### Phase 5 — Multilingual, evaluation, stretch
 - [ ] T5.1 Hindi support via Bhashini (ASR/translation/TTS)

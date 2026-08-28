@@ -96,6 +96,66 @@ def extract_entities(
     context: ContextObject | None = None,
     question: str = "",
 ) -> EntitySet
+
+# T4.1 Main Query Pipeline Entrypoint (called by backend /api/v1/chat):
+from src.reasoning.query_pipeline import (
+    SubTask,
+    Citation,
+    QueryResult,
+    QueryPipeline,
+    query,
+)
+
+async def query(
+    question: str,
+    domain_intent: DomainIntent | str = DomainIntent.OTHER,
+    context: ContextObject | None = None,
+    jurisdiction: str = "INDIA",
+    language: str = "en",
+    conversation_history: list | None = None,
+) -> QueryResult
+
+# T4.2 Zero-Hallucination Citation Validator:
+from src.citations.validator import (
+    CitationValidationResult,
+    CitationValidator,
+    validate_citations,
+)
+
+def validate_citations(
+    raw_answer: str,
+    evidence_chunks: list[EvidenceChunk],
+) -> CitationValidationResult
+
+# T4.3 Composite Confidence Scorer:
+from src.confidence.scorer import (
+    ConfidenceBreakdown,
+    ConfidenceScorer,
+    compute_confidence,
+)
+
+def compute_confidence(
+    evidence_chunks: list[EvidenceChunk],
+    validation_result: CitationValidationResult | None = None,
+    total_sub_tasks: int = 1,
+    sub_tasks_with_evidence: int = 1,
+    jurisdiction_mismatch: bool = False,
+    is_export_cross_border: bool = False,
+    raw_answer: str = "",
+) -> ConfidenceBreakdown
+
+# T4.4 Regulatory & Safety Guardrail Suite:
+from src.guardrails.rules import (
+    GuardrailResult,
+    GuardrailEngine,
+    apply_guardrails,
+)
+
+def apply_guardrails(
+    raw_answer: str,
+    evidence_chunks: list[EvidenceChunk],
+    jurisdictions: list[str] = ("INDIA",),
+) -> GuardrailResult
 ```
 
 ---
@@ -156,6 +216,39 @@ Cross-part schemas for structured context gathered from the user before retrieva
 
 ---
 
+## QueryResult Schema (API Contract for Backend `/api/v1/chat` & Frontend T2.1/T2.2)
+
+```python
+@dataclass
+class Citation:
+    chunk_id: str                          # e.g., "chunk_legal_statutory_sec3p"
+    document_id: str                       # e.g., "doc_patents_act_1970"
+    collection: str                        # "legal_statutory" | "standards_formulations" | ...
+    jurisdiction: str                      # "INDIA" | "EU" | "USA" | "INTERNATIONAL"
+    title: str                             # Act / Monograph / Treaty title
+    source_url: str | None = None
+    section_or_ref: str | None = None      # e.g. "Section 3(p)"
+    snippet: str = ""                      # Exact cited excerpt
+
+@dataclass
+class QueryResult:
+    answer: str                            # Citation-anchored LLM response with [chunk_id] tags
+    confidence: float                      # 0.0 to 1.0 grounded score
+    confidence_label: str                  # "HIGH" (>=0.80) | "MEDIUM" (>=0.50) | "LOW" | "ABSTAIN"
+    classification: ProductClassificationResult | None = None
+    abs_assessment: ABSAssessmentResult | None = None
+    citations: list[Citation] = field(default_factory=list)
+    requires_human_review: bool = False    # True if confidence < 0.70 or jurisdiction mismatch
+    sub_tasks_run: list[str] = field(default_factory=list) # Labels for Frontend Evidence Map
+    sources_by_collection: dict[str, list[str]] = field(default_factory=dict)
+    warning_message: str | None = None
+    latency_ms: float | None = None
+    domain_intent: DomainIntent | None = None
+    fine_grained_intents: list[FineGrainedIntent] = field(default_factory=list)
+```
+
+---
+
 ## Corpus manifest
 
 Full authoritative manifest created at [`ai/data/corpus/manifest.md`](data/corpus/manifest.md):
@@ -185,6 +278,54 @@ Payload fields are stored directly at the top level for efficient metadata filte
 ---
 
 ## Log
+
+### T4.4 — Guardrails & abstention rules (2026-08-28)
+Implemented `src/guardrails/rules.py`:
+- `GuardrailEngine` and `apply_guardrails()` enforcing:
+  1. Minimum evidence abstention threshold (Rule 6).
+  2. CSIR-TKDL access guardrail: Sanitizes any direct private database access claims and attaches official access notice (context.md §5).
+  3. Multi-jurisdiction structural separation: Enforces clean headings for domestic vs export regulations.
+  4. Pipeline-level statutory legal advisory disclaimer.
+- Tested against adversarial hallucination/access test cases in `ai/tests/test_guardrails.py` (100% pass).
+**Phase 4 complete!** All reasoning, retrieval pipeline, citation validation, confidence scoring, and guardrail tasks are verified.
+
+### T4.3 — Composite confidence scorer (2026-08-28)
+Implemented `src/confidence/scorer.py`:
+- `ConfidenceScorer` and `compute_confidence()` calculating an explainable 6-factor composite score:
+  - `retrieval_score` (w=0.20): Top 3 normalized Qdrant/hybrid scores
+  - `citation_score` (w=0.25): Fraction of citations passing zero-hallucination validation
+  - `source_authority_score` (w=0.15): Principal Statute/Treaty (1.0) > Pharmacopoeia/Monograph (0.95) > Forms/Case law (0.85) > Secondary (0.65)
+  - `jurisdiction_match` (w=0.15): Exact domestic (1.0), Export harmonized (0.90), Mismatch (0.45)
+  - `answer_evidence_coverage` (w=0.10): Fraction of substantive claims carrying grounded citations
+  - `sub_task_coverage` (w=0.15): Fraction of decomposed sub-tasks with returned evidence
+- Thresholds: `HIGH` (>=0.80), `MEDIUM` (0.50-0.79), `LOW` (<0.50), `ABSTAIN` (0.0).
+- Triggers `requires_human_review = True` whenever composite score < 0.70 or jurisdiction mismatch detected.
+- Tested in `ai/tests/test_confidence.py` (100% pass).
+Next task: Phase 4, T4.4 (`src/reasoning/guardrails.py`).
+
+### T4.2 — Citation validator (2026-08-28)
+Implemented `src/citations/validator.py`:
+- `CitationValidator` and `validate_citations()` implementing zero-hallucination citation validation.
+- Verifies every cited `[chunk_id]` against retrieved `evidence_chunks` map and confirms plausible textual/domain token overlap.
+- Performs legal acronym expansion (NBA, SBB, TKDL, FSSAI, THMPD, DSHEA).
+- Strips unsupported sentences if below threshold; triggers strict abstention if > 50% citations are unverified/fabricated.
+- Tested in `ai/tests/test_citations.py` (100% pass).
+Next task: Phase 4, T4.3 (`src/reasoning/confidence_scorer.py`).
+
+### T4.1 — Query pipeline (2026-08-28)
+Implemented `src/reasoning/query_pipeline.py` and versioned answer synthesis prompt templates in `src/prompts/answer_synthesis/`:
+- `QueryPipeline` and `async def query(...)` executing complete 11-step intent-first agentic reasoning flow:
+  1. Jurisdiction resolution (T3.1)
+  2. Fine-grained intent classification & collection routing (T3.2)
+  3. Entity extraction (T3.6) + deterministic statutory product/ABS rules engines (T3.3/T3.4)
+  4. Query decomposition into targeted collection sub-tasks (Rule 14)
+  5. Parallel multi-collection hybrid retrieval with hard jurisdiction filtering (T2.3) with single-query fast path
+  6. Deduplicated evidence assembly and abstention thresholding (< MIN_EVIDENCE_THRESHOLD)
+  7. Grounded LLM synthesis anchored with inline `[chunk_id]` citations
+  8. Citation extraction and validation
+  9. Confidence scoring and compliance flags
+- Tested in `ai/tests/test_pipeline.py` (100% pass across export, patent, medicinal, and abstention workflows).
+Next task: Phase 4, T4.2 (`src/citations/validator.py`).
 
 ### T3.6 — Entity extractor (2026-08-28)
 Implemented `src/entity_extraction/extractor.py` and curated lookup table `ai/data/herb_names.yaml`:
