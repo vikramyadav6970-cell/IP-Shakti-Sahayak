@@ -20,6 +20,7 @@ export function ContextPage() {
     setContextAnswer,
     setContextObject,
     setEntitySet,
+    setSessionId,
   } = useIntentStore()
 
   const [questions, setQuestions] = useState<ContextQuestion[]>([])
@@ -93,24 +94,30 @@ export function ContextPage() {
         intent: domain_intent,
         answers: context_answers,
       })
+      // Store session_id from backend — needed for chat API calls
+      if (result.session_id) {
+        setSessionId(result.session_id)
+      }
       setContextObject({
         domain_intent,
         answers: context_answers,
       })
+      const es = result.entity_set as Record<string, unknown>
       setEntitySet({
-        herbs: (result.entity_set as Record<string, string[]>).herbs ?? [],
-        jurisdictions: (result.entity_set as Record<string, string[]>).jurisdictions ?? [],
-        ip_types: (result.entity_set as Record<string, string[]>).ip_types ?? [],
-        product_types: (result.entity_set as Record<string, string[]>).product_types ?? [],
-        regulations: (result.entity_set as Record<string, string[]>).regulations ?? [],
-        organizations: (result.entity_set as Record<string, string[]>).organizations ?? [],
+        herbs: (es.herbs as string[]) ?? [],
+        jurisdictions: (es.jurisdictions as string[]) ?? [],
+        ip_types: (es.ip_types as string[]) ?? [],
+        biological_resources: (es.biological_resources as string[]) ?? [],
+        formulation_name: (es.formulation_name as string | null) ?? null,
+        destination_country: (es.destination_country as string | null) ?? null,
+        regulatory_regime: (es.regulatory_regime as string | null) ?? null,
       })
       navigate('/chat')
     } catch {
       setError('Failed to process context. Please try again.')
       setSubmitting(false)
     }
-  }, [domain_intent, context_answers, submitting, navigate, setContextObject, setEntitySet])
+  }, [domain_intent, context_answers, submitting, navigate, setContextObject, setEntitySet, setSessionId])
 
   // Progress
   const answeredCount = questions.filter((q) => {

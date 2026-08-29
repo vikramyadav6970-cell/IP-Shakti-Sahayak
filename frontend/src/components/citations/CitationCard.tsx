@@ -20,7 +20,8 @@ interface CitationCardProps {
 }
 
 export function CitationCard({ citation, index }: CitationCardProps) {
-  const collectionStyle = COLLECTION_COLORS[citation.collection]
+  const collectionKey = (citation.collection || 'legal_statutory') as QdrantCollection
+  const collectionStyle = COLLECTION_COLORS[collectionKey] || { bg: 'rgba(45, 212, 191, 0.12)', text: '#2dd4bf', label: 'Document' }
 
   return (
     <motion.div
@@ -164,9 +165,10 @@ export function NoCitationsCard() {
    ────────────────────────────────────────────────────────────── */
 
 const CONFIDENCE_STYLES: Record<ConfidenceLabel, { bg: string; text: string; border: string }> = {
-  HIGH:   { bg: 'rgba(45, 212, 191, 0.12)', text: '#2dd4bf', border: 'rgba(45, 212, 191, 0.2)' },
-  MEDIUM: { bg: 'rgba(245, 158, 11, 0.12)', text: '#f59e0b', border: 'rgba(245, 158, 11, 0.2)' },
-  LOW:    { bg: 'rgba(239, 68, 68, 0.12)',  text: '#ef4444', border: 'rgba(239, 68, 68, 0.2)' },
+  HIGH:    { bg: 'rgba(45, 212, 191, 0.12)', text: '#2dd4bf', border: 'rgba(45, 212, 191, 0.2)' },
+  MEDIUM:  { bg: 'rgba(245, 158, 11, 0.12)', text: '#f59e0b', border: 'rgba(245, 158, 11, 0.2)' },
+  LOW:     { bg: 'rgba(239, 68, 68, 0.12)',  text: '#ef4444', border: 'rgba(239, 68, 68, 0.2)' },
+  ABSTAIN: { bg: 'rgba(156, 163, 175, 0.12)', text: '#9ca3af', border: 'rgba(156, 163, 175, 0.2)' },
 }
 
 interface ConfidenceBadgeProps {

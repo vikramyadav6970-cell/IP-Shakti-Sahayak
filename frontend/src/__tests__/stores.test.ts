@@ -49,11 +49,11 @@ describe('Zustand Stores Suite', () => {
 
     it('toggles to International mode and allows setting destination country', () => {
       useJurisdictionStore.getState().setMode('INTERNATIONAL')
-      useJurisdictionStore.getState().setInternationalCountry('Germany')
+      useJurisdictionStore.getState().setInternationalCountry('EU')
 
       const state = useJurisdictionStore.getState()
       expect(state.mode).toBe('INTERNATIONAL')
-      expect(state.internationalCountry).toBe('Germany')
+      expect(state.internationalCountry).toBe('EU')
     })
   })
 

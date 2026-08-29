@@ -162,3 +162,11 @@ notes for that part specifically.
 - [x] T5.2 Evaluation harness (100-question eval set + 8-dimension benchmark runner) — done 2026-08-28
 - [x] T5.3 TKDL public-information pointer integration — done 2026-08-28
 - [x] T5.4 (stretch) Knowledge graph (Neo4j AuraDB & multi-hop engine) — done 2026-08-28
+
+---
+
+## Final Verification Summary (2026-08-29)
+- **Qdrant Cloud Dense Ingestion:** 100% complete across all 5 corpus collections (`legal_statutory`, `standards_formulations`, `case_law_prior_art`, `procedural_forms`, `international_export`) with `BAAI/bge-m3` 1024-dim dense vectors.
+- **AI Core Test Suite:** 95 / 95 tests passing (`ai/tests/`).
+- **Backend FastAPI Suite:** 8 / 8 tests passing (`backend/tests/`).
+- **Frontend Vitest & Vite Build:** 12 / 12 tests passing, TypeScript production build verified with 0 errors (`frontend/`).

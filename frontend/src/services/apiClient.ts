@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger'
  */
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
-  timeout: 30000,
+  timeout: 120000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,10 +16,15 @@ export const apiClient = axios.create({
 // Request interceptor: attach auth token
 apiClient.interceptors.request.use(
   (config) => {
-    // Dynamic import to avoid circular deps — store is accessed at call time
-    const token = localStorage.getItem('ip-sakti-auth-token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const token = localStorage.getItem('ip-sakti-auth-token')
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`
+        }
+      }
+    } catch {
+      // Ignore storage access errors
     }
     return config
   },

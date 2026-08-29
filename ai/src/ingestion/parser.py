@@ -46,21 +46,34 @@ class ParsedDocument:
 class DocumentParser:
     """Parser supporting PDF, HTML, and text-based legal & regulatory sources."""
 
-    # Regex patterns for identifying legal structure markers
+    # Regex patterns for identifying structural legal markers
     CHAPTER_PATTERN = re.compile(
-        r"^(?:CHAPTER|PART)\s+([IVXLCDM\d]+|[A-Z]+)[\s:.\-—]*(.*)$", re.IGNORECASE | re.MULTILINE
+        r"^(?:CHAPTER|PART|SCHEDULE)\s+([IVXLCDM\d]+|[A-Z]+)[\s:.\-—]*(.*)$", re.IGNORECASE | re.MULTILINE
     )
     SECTION_PATTERN = re.compile(
-        r"^(?:Section\s+)?(\d+[A-Za-z]?(?:\([a-zA-Z0-9]+\))*)\.\s+(.*)$", re.IGNORECASE | re.MULTILINE
+        r"^(?:Section|Sec\.|Rule|Regulation|Order|Article|Art\.)\s+(\d+[A-Za-z]?(?:\([a-zA-Z0-9]+\))*)\.?\s*(.*)$",
+        re.IGNORECASE | re.MULTILINE,
     )
-    ARTICLE_PATTERN = re.compile(
-        r"^Article\s+(\d+[A-Za-z]?(?:\.\d+)*)[\s:.\-—]*(.*)$", re.IGNORECASE | re.MULTILINE
-    )
-    RULE_PATTERN = re.compile(
-        r"^Rule\s+(\d+[A-Za-z]?(?:\.\d+)*)[\s:.\-—]*(.*)$", re.IGNORECASE | re.MULTILINE
+    STANDALONE_SEC_PATTERN = re.compile(
+        r"^(\d+[A-Za-z]?)\.\s+([A-Z][a-zA-Z0-9\s,\-\(\)\/\–—\':]{2,80})$",
+        re.MULTILINE,
     )
     FORM_PATTERN = re.compile(
-        r"^FORM\s+([IVXLCDM\d]+|[A-Za-z0-9\-]+)[\s:.\-—]*(.*)$", re.IGNORECASE | re.MULTILINE
+        r"^(?:FORM|Form)\s+([IVXLCDM\d]+|[A-Za-z0-9\-]+)[\s:.\-—]*(.*)$", re.MULTILINE
+    )
+
+    # Monograph and classical formulation patterns (standards_formulations)
+    AFI_RECIPE_PATTERN = re.compile(
+        r"^(\d+\s*:\s*\d+)\s+([A-ZĀĪŪṚṜḶḸĒAIŌAUṀḤṄÑṆŃŚṢA-Z\s\(\)\/\-\'\,\.]+)",
+        re.MULTILINE,
+    )
+    MONOGRAPH_TITLE_PATTERN = re.compile(
+        r"^([A-ZĀĪŪṚṜḶḸĒAIŌAUṀḤṄÑṆŃŚṢ\s\-\'\,\.]{3,60})\s*\(([^)]+)\)$",
+        re.MULTILINE,
+    )
+    FORMULATION_CATEGORY_PATTERN = re.compile(
+        r"^(\d+\.\s+)?([A-ZĀĪŪṚṜḶḸĒAIŌAUṀḤṄÑṆŃŚṢ\s]{3,50}\s+(?:CŪRṆA|CVARNA|GHṚTA|GHRITA|TAILA|ASAVA|ARISHTA|ARIṢṬA|VATĪ|VATI|GUGULU|GUGGULU|AVALEHA|KVAATHA|KWATHA|LEPA|BHASMA|SINDURA|PARPATI|KSHARA|RASAYANA|YOGA|DRAVAKA|SATVA|MODAKA|KHANDA|LEHYA|PISTI|TAILAM))\b.*$",
+        re.MULTILINE,
     )
 
     def __init__(self, use_ocr_fallback: bool = True):
@@ -125,7 +138,7 @@ class DocumentParser:
                 # Save previous section
                 if current_text_buf:
                     sec_text = "\n".join(current_text_buf).strip()
-                    if sec_text:
+                    if len(sec_text) > 10:
                         sections.append(
                             ParsedSection(
                                 heading=current_heading,
@@ -137,7 +150,7 @@ class DocumentParser:
                     current_text_buf = []
 
                 current_heading = text
-                sec_match = re.search(r"(?:Section|Article|Rule)\s+(\d+[A-Za-z]?(?:\([a-zA-Z0-9]+\))*)", text, re.I)
+                sec_match = re.search(r"(?:Section|Article|Rule|Regulation)\s+(\d+[A-Za-z]?(?:\([a-zA-Z0-9]+\))*)", text, re.I)
                 current_sec_num = sec_match.group(1) if sec_match else None
                 lines.append(f"\n## {text}\n")
             else:
@@ -147,7 +160,7 @@ class DocumentParser:
         # Flush trailing section
         if current_text_buf:
             sec_text = "\n".join(current_text_buf).strip()
-            if sec_text:
+            if len(sec_text) > 10:
                 sections.append(
                     ParsedSection(
                         heading=current_heading,
@@ -178,7 +191,6 @@ class DocumentParser:
     ) -> ParsedDocument:
         """Parse PDF document extracting text layer with PyMuPDF (fitz) or pypdf fallback."""
         text_pages: List[str] = []
-        sections: List[ParsedSection] = []
 
         try:
             import fitz  # PyMuPDF
@@ -304,35 +316,140 @@ class DocumentParser:
             metadata=dict(manifest_meta),
         )
 
+    def _strip_front_matter_and_toc(self, text: str) -> str:
+        """Strip preliminary Arrangement of Sections / Table of Contents before statutory body."""
+        toc_match = re.search(
+            r"\b(?:ARRANGEMENT\s+OF\s+SECTIONS|ARRANGEMENT\s+OF\s+RULES|ARRANGEMENT\s+OF\s+CLAUSES|CONTENTS|TABLE\s+OF\s+CONTENTS)\b",
+            text,
+            re.IGNORECASE,
+        )
+        if not toc_match:
+            return text
+
+        start_pos = toc_match.start()
+        body_patterns = [
+            r"\n\s*(?:CHAPTER|PART)\s+[I1]\b",
+            r"\n\s*CHAPTER\s+I\s*—?\s*PRELIMINARY",
+            r"\n\s*PRELIMINARY\b",
+            r"\n\s*BE\s+it\s+enacted\s+by\s+Parliament",
+            r"\n\s*An\s+Act\s+to\b",
+            r"\n\s*In\s+exercise\s+of\s+the\s+powers\s+conferred\s+by\b",
+            r"\n\s*Section\s+1\.\s+Short\s+title",
+            r"\n\s*1\.\s+Short\s+title\b",
+            r"\n\s*1\.\s+\(1\)\s+This\s+Act",
+            r"\n\s*1\.\s+\(1\)\s+These\s+rules",
+            r"\n\s*1\.\s+\(1\)\s+These\s+regulations",
+        ]
+
+        body_start = -1
+        search_region = text[toc_match.end():]
+        for pat in body_patterns:
+            bm = re.search(pat, search_region, re.IGNORECASE)
+            if bm:
+                pos = toc_match.end() + bm.start()
+                if body_start == -1 or pos < body_start:
+                    body_start = pos
+
+        if body_start != -1:
+            preamble = text[:start_pos].strip()
+            body = text[body_start:].strip()
+            return f"{preamble}\n\n{body}".strip()
+
+        return text
+
     def _extract_sections_from_text(self, text: str, collection: str) -> List[ParsedSection]:
         """Extract structured sections based on legal markers in plain text."""
+        clean_text = self._strip_front_matter_and_toc(text)
         sections: List[ParsedSection] = []
-        lines = text.splitlines()
+        lines = clean_text.splitlines()
 
-        current_heading = "Preamble / Preliminary"
+        current_heading = "General"
         current_sec_num: Optional[str] = None
         current_level = 1
         current_buf: List[str] = []
 
-        # Split on common statutory section patterns
+        is_standards = collection == "standards_formulations"
+
         for line in lines:
             stripped = line.strip()
             if not stripped:
                 continue
 
-            sec_match = (
-                self.SECTION_PATTERN.match(stripped)
-                or self.ARTICLE_PATTERN.match(stripped)
-                or self.RULE_PATTERN.match(stripped)
-                or self.FORM_PATTERN.match(stripped)
-                or self.CHAPTER_PATTERN.match(stripped)
-            )
+            sec_match = None
+            sec_num = None
+            level = 2
+
+            # Split on common statutory section patterns
+            ch_match = self.CHAPTER_PATTERN.match(stripped)
+            if ch_match:
+                sec_match = ch_match
+                sec_num = ch_match.group(1)
+                level = 1
+            elif is_standards:
+                rec_match = self.AFI_RECIPE_PATTERN.match(stripped)
+                mono_match = self.MONOGRAPH_TITLE_PATTERN.match(stripped)
+                cat_match = self.FORMULATION_CATEGORY_PATTERN.match(stripped)
+                app_match = re.match(r"^(?:APPENDIX|Appendix)\s+([IVXLCDM\d]+|[A-Z0-9]+)[\s:.\-—]*(.*)$", stripped)
+
+                if rec_match:
+                    sec_match = rec_match
+                    sec_num = rec_match.group(1).replace(" ", "")
+                    level = 2
+                elif mono_match:
+                    sec_match = mono_match
+                    sec_num = mono_match.group(1)
+                    level = 2
+                elif cat_match:
+                    sec_match = cat_match
+                    sec_num = cat_match.group(2)
+                    level = 2
+                elif app_match:
+                    sec_match = app_match
+                    sec_num = f"App_{app_match.group(1)}"
+                    level = 1
+                elif self.SECTION_PATTERN.match(stripped):
+                    sm = self.SECTION_PATTERN.match(stripped)
+                    sec_match = sm
+                    sec_num = sm.group(1)
+                    level = 2
+            else:
+                sec_explicit = self.SECTION_PATTERN.match(stripped)
+                form_match = self.FORM_PATTERN.match(stripped)
+
+                if sec_explicit:
+                    sec_match = sec_explicit
+                    sec_num = sec_explicit.group(1)
+                    level = 2
+                elif form_match:
+                    sec_match = form_match
+                    sec_num = form_match.group(1)
+                    level = 2
+                else:
+                    st_match = self.STANDALONE_SEC_PATTERN.match(stripped)
+                    if st_match:
+                        title_candidate = st_match.group(2).strip()
+                        is_artifact = (
+                            re.search(r"^\([ivxldcm\d]+\)", title_candidate, re.I)
+                            or re.search(r"\b(?:\d+|Rs\.?|INR|\.\.\.|___)\b", title_candidate)
+                            or title_candidate.lower() in [
+                                "refrigerator.",
+                                "refractometer.",
+                                "oven.",
+                                "wastage.",
+                                "autoclave/sterilizer.",
+                                "disinfectants.",
+                            ]
+                        )
+                        if not is_artifact:
+                            sec_match = st_match
+                            sec_num = st_match.group(1)
+                            level = 2
 
             if sec_match:
                 # Flush previous section buffer
                 if current_buf:
                     buf_text = "\n".join(current_buf).strip()
-                    if buf_text:
+                    if len(buf_text) > 10:
                         sections.append(
                             ParsedSection(
                                 heading=current_heading,
@@ -343,9 +460,9 @@ class DocumentParser:
                         )
                     current_buf = []
 
-                current_sec_num = sec_match.group(1) if len(sec_match.groups()) >= 1 else None
+                current_sec_num = sec_num
                 current_heading = stripped
-                current_level = 1 if "CHAPTER" in stripped.upper() or "PART" in stripped.upper() else 2
+                current_level = level
                 current_buf.append(stripped)
             else:
                 current_buf.append(line)
@@ -353,7 +470,7 @@ class DocumentParser:
         # Flush last section
         if current_buf:
             buf_text = "\n".join(current_buf).strip()
-            if buf_text:
+            if len(buf_text) > 10:
                 sections.append(
                     ParsedSection(
                         heading=current_heading,
@@ -393,6 +510,13 @@ class DocumentParser:
         """Normalize line breaks, remove null bytes, clean repetitive whitespace."""
         text = text.replace("\x00", "")
         text = re.sub(r"\r\n|\r", "\n", text)
+        text = re.sub(r"\[\s*PART\s+[IVXLCDM\d]+[—\-][A-Z0-9\s.()]+\s*\]", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"THE\s+GAZETTE\s+OF\s+INDIA\s*:?\s*EXTRAORDINARY[^\n]*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"MINISTRY\s+OF\s+[A-Z\s,]+\b(?:NOTIFICATION|NEW DELHI)[^\n]*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"^\s*Page\s+\d+\s+(?:of\s+\d+)?\s*$", "", text, flags=re.IGNORECASE | re.MULTILINE)
+        text = re.sub(r"^\s*\d{1,4}\s*$", "", text, flags=re.MULTILINE)
+        text = re.sub(r"\.{4,}", "...", text)
+        text = re.sub(r"_{4,}", "___", text)
         text = re.sub(r"[ \t]+", " ", text)
         text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip()

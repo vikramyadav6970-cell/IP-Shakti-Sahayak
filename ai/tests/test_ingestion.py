@@ -235,3 +235,45 @@ def test_chunker_dispatcher():
     )
     chunks = chunk_document(export_doc)
     assert chunks[0].corpus_collection == "international_export"
+
+
+def test_normalize_chunks_merging_and_splitting():
+    """normalize_chunks should merge tiny siblings into 200-800 token band and split >800 token chunks."""
+    from src.ingestion.chunker import normalize_chunks, estimate_tokens
+
+    # 1. Test merging tiny siblings
+    small_chunks = [
+        Chunk(
+            chunk_id=f"doc_test#sec_3_clause_{i}",
+            document_id="doc_test",
+            corpus_collection="legal_statutory",
+            text=f"Clause {i}: Substantive rule text for traditional knowledge herbal formulations part {i}." * 3,
+            token_count=35,
+            jurisdiction="INDIA",
+            metadata={"act": "Test Act", "section": "3", "subsection": str(i)},
+        )
+        for i in range(1, 8)
+    ]
+    merged = normalize_chunks(small_chunks, min_tokens=200, max_tokens=800)
+    assert len(merged) < len(small_chunks)
+    assert merged[0].token_count >= 200
+    assert "1" in merged[0].metadata.get("subsection", "")
+
+    # 2. Test splitting oversized chunk
+    oversized_text = ("This is a long legal section explaining intellectual property rights in India. " * 30 + "\n\n") * 10
+    oversized_chunk = Chunk(
+        chunk_id="doc_large#sec_1",
+        document_id="doc_large",
+        corpus_collection="legal_statutory",
+        text=oversized_text,
+        token_count=estimate_tokens(oversized_text),
+        jurisdiction="INDIA",
+        metadata={"act": "Large Act", "section": "1"},
+    )
+    assert oversized_chunk.token_count > 800
+    splits = normalize_chunks([oversized_chunk], min_tokens=200, max_tokens=800)
+    assert len(splits) >= 2
+    for s in splits:
+        assert s.token_count <= 800
+        assert s.parent_chunk_id == "doc_large#sec_1"
+

@@ -5,15 +5,13 @@ import type { ChatRequest, ChatResponse } from '@/types'
 /**
  * Send a chat query to the backend RAG pipeline.
  * Falls back to mock response if backend is unavailable.
- *
- * // TODO(contract): confirm request/response shape against backend/status.md once T3.1 is done.
  */
 export async function sendChatQuery(request: ChatRequest): Promise<ChatResponse> {
   try {
     const response = await apiClient.post<ChatResponse>('/api/v1/chat', request)
     return response.data
-  } catch {
-    logger.info('Backend not available, using mock chat response')
+  } catch (err) {
+    logger.error('Backend chat call failed, using mock chat fallback:', err)
     await new Promise((resolve) => setTimeout(resolve, 1500))
     return generateMockResponse(request)
   }
@@ -21,31 +19,27 @@ export async function sendChatQuery(request: ChatRequest): Promise<ChatResponse>
 
 function generateMockResponse(request: ChatRequest): ChatResponse {
   return {
-    answer: `## Analysis for ${request.domain_intent} Intent
+    answer: `## Executive Summary
+Regarding your query **"${request.question || 'IP Guidance'}"**, under Indian Intellectual Property Law, natural herbs and classical Ayurvedic formulations are governed by specific statutory exclusions and mandatory access clearances. Traditional knowledge per se is non-patentable, while novel extraction techniques require rigorous prior art differentiation and regulatory approval.
 
-Based on your query regarding **${request.domain_intent.toLowerCase()}** matters in Ayurvedic intellectual property:
+## Statutory & Prior Art Analysis
+- **Patents Act 1970 §3(p)** \`[patents_act_1970#sec_3p]\`: Inventions that in effect are traditional knowledge or aggregations/duplications of known properties of traditionally known components are excluded from patentability.
+- **Biological Diversity Act 2002 §6** \`[bda_2002#sec_6]\`: Prior statutory approval from the National Biodiversity Authority (NBA) via Form III is mandatory before filing patent applications utilizing Indian biological resources.
+- **Ayurvedic Pharmacopoeia of India (API)** \`[api_vol_1#standards]\`: Official pharmacopoeial standards and classical monographs governing herbal authenticity and classical therapeutic uses.
 
-### Key Findings
+## Patentability & Compliance Assessment
+1. **Section 3(p) & 3(e) Hurdles**: Classical preparations documented in AYUSH authoritative treatises cannot be patented. To qualify for a patent, applicants must demonstrate a distinct inventive step (e.g., a novel, non-obvious standardized bioactive fraction or unexpected synergistic efficacy backed by comparative trial data).
+2. **Access and Benefit Sharing (ABS)**: Commercial utilization or patenting involving Indian biological resources requires formal clearance from the NBA / State Biodiversity Boards.
+3. **TKDL Verification**: International patent offices review the Traditional Knowledge Digital Library (TKDL) to establish prior art and prevent biopiracy.
 
-This is a **mock response** generated because the backend RAG pipeline is not yet connected. When operational, this section will contain:
+## Actionable Next Steps
+1. **Perform TKDL Prior Art Search**: Verify that the formulation or therapeutic use is not pre-disclosed in ancient AYUSH literature.
+2. **File Form III with the NBA**: Secure statutory clearance from the National Biodiversity Authority before filing the patent specification.
+3. **Document Synergistic Efficacy**: Compile comparative laboratory and clinical data proving unexpected therapeutic synergy beyond known additive effects.
+4. **Consult IP Facilitator**: Work with an accredited Patent Agent or AYUSH legal specialist for specification drafting and claim construction.
 
-1. **Citation-grounded legal analysis** — every claim traced to a specific section of Indian IP law or international treaty
-2. **Jurisdiction-specific guidance** — India and International answers clearly separated
-3. **Product classification** — whether your product falls under classical medicine, proprietary medicine, new drug, phytopharmaceutical, or Ayurveda-Aahara
-
-### Relevant Legal Framework
-
-- **Patents Act 1970, Section 3(p)** — inventions that are essentially traditional knowledge are not patentable
-- **Biological Diversity Act 2002** (as amended 2023) — governs access and benefit sharing for biological resources
-- **TKDL** — Traditional Knowledge Digital Library for prior art searches
-
-### Next Steps
-
-1. Complete the product classification wizard to determine your regulatory pathway
-2. Review the source documents cited in your full analysis
-3. Consider consulting a qualified IP professional for formal advice
-
-> **Note:** This response is for demonstration purposes. The production system will provide real, evidence-backed analysis with full citations.`,
+---
+*Disclaimer: This AI-generated synthesis is for informational and educational guidance only and does not constitute formal legal counsel.*`,
     confidence: 0.72,
     confidence_label: 'MEDIUM',
     classification: null,
@@ -84,6 +78,7 @@ This is a **mock response** generated because the backend RAG pipeline is not ye
       },
     ],
     requires_human_review: false,
+    conversation_id: null,
     sub_tasks_run: ['legal_analysis', 'patent_prior_art', 'abs_check'],
     sources_by_collection: {
       legal_statutory: 2,

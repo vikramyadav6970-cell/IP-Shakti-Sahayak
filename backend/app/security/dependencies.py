@@ -10,6 +10,7 @@ from app.schemas.auth import TokenPayload
 from app.security.auth import ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", auto_error=False)
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
@@ -35,6 +36,23 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+async def get_optional_current_user(
+    db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme_optional)
+) -> User | None:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        if user_id is None or token_type != "access":
+            return None
+        user_repo = UserRepository(db)
+        return await user_repo.get_by_id(user_id)
+    except Exception:
+        return None
 
 def require_role(*roles: UserRole):
     """Dependency factory for RBAC-gated endpoints."""

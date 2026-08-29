@@ -15,6 +15,8 @@ from src.ingestion.chunker import (
     ProceduralFormsChunker,
     InternationalExportChunker,
     chunk_document,
+    normalize_chunks,
+    split_oversized_chunk,
 )
 
 __all__ = [
@@ -30,4 +32,7 @@ __all__ = [
     "ProceduralFormsChunker",
     "InternationalExportChunker",
     "chunk_document",
+    "normalize_chunks",
+    "split_oversized_chunk",
 ]
+

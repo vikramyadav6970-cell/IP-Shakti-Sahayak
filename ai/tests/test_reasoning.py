@@ -22,6 +22,8 @@ def test_unsupported_provider_raises_error():
 def test_missing_api_key_raises_error(monkeypatch):
     """Instantiating a provider with no API key should raise ValueError."""
     monkeypatch.delenv("LLM_API_KEY", raising=False)
+    from src.config import settings
+    monkeypatch.setattr(settings, "llm_api_key", "")
     with pytest.raises(ValueError, match="API key must be provided"):
         GeminiProvider(api_key=None)
 

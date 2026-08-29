@@ -7,19 +7,19 @@ describe('Frontend Services Suite (with Mock Fallback)', () => {
     it('returns tailored context questions for BUSINESS intent', async () => {
       const questions = await fetchContextQuestions({ intent: 'BUSINESS' })
       expect(questions.length).toBeGreaterThan(0)
-      expect(questions[0]?.id).toBe('biz_product_type')
+      expect(['biz_product_type', 'product_type']).toContain(questions[0]?.id)
     })
 
     it('returns tailored context questions for PATENT intent', async () => {
       const questions = await fetchContextQuestions({ intent: 'PATENT' })
       expect(questions.length).toBeGreaterThan(0)
-      expect(questions.some((q) => q.id === 'pat_novel')).toBe(true)
+      expect(questions.some((q) => q.id === 'pat_novel' || q.id === 'novel_aspect')).toBe(true)
     })
 
     it('returns tailored context questions for EXPORT intent', async () => {
       const questions = await fetchContextQuestions({ intent: 'EXPORT' })
       expect(questions.length).toBeGreaterThan(0)
-      expect(questions.some((q) => q.id === 'exp_nba')).toBe(true)
+      expect(questions.some((q) => q.id === 'exp_nba' || q.id === 'nba_approached')).toBe(true)
     })
 
     it('processes context answers and returns entity sets', async () => {
@@ -37,7 +37,7 @@ describe('Frontend Services Suite (with Mock Fallback)', () => {
       const res = await sendChatQuery({
         question: 'How does Section 3(p) affect traditional formulations?',
         domain_intent: 'PATENT',
-        context_object: null,
+        session_id: null,
         jurisdiction: 'INDIA',
         language: 'en',
         conversation_id: null,

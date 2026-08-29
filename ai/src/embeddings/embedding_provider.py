@@ -55,7 +55,14 @@ class BGEM3EmbeddingProvider(EmbeddingProvider):
         normalize_embeddings: bool = True,
     ):
         super().__init__(model_name=model_name, dimension=dimension)
-        self.device = device
+        if device is None:
+            try:
+                import torch
+                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            except ImportError:
+                self.device = "cpu"
+        else:
+            self.device = device
         self.normalize_embeddings = normalize_embeddings
         self._model = None
 

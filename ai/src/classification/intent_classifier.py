@@ -8,9 +8,14 @@ Encodes coding_conventions.md Rule 11 & Rule 14:
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union, TYPE_CHECKING
 import logging
 import re
+
+if TYPE_CHECKING:
+    from src.reasoning.llm_provider import LLMProvider
+else:
+    LLMProvider = Any
 
 logger = logging.getLogger(__name__)
 
