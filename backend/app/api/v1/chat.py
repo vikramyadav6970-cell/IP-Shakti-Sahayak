@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_db
-from app.api.v1.auth import get_current_user
+from app.security.dependencies import get_optional_current_user, get_current_user
 from app.models.user import User
 from app.schemas.chat import ChatRequest, ChatResponse, ConversationListResponse, ConversationDetailResponse
 from app.services.chat_service import ChatService
 from app.repositories.chat_repo import ChatRepository
 from app.security.rate_limit import RateLimiter
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -16,13 +16,14 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 async def process_chat(
     request: ChatRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_optional_current_user)
 ):
     """
     Process a chat query, retrieve context, call AI layer, and persist the conversation.
     """
     service = ChatService(db)
-    return await service.process_chat(request, current_user.id)
+    user_id = current_user.id if current_user else None
+    return await service.process_chat(request, user_id)
 
 @router.get("/conversations", response_model=List[ConversationListResponse], dependencies=[Depends(RateLimiter(60, 60))])
 async def list_conversations(

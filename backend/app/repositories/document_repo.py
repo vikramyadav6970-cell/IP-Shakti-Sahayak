@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from app.models.document import Document, DocumentVersion, DocumentType
+from app.models.document import Document, DocumentVersion, DocumentType, IngestionStatus
 from app.schemas.document import DocumentCreate, DocumentUpdate
 from typing import Optional, List
 from uuid import UUID

@@ -7,6 +7,7 @@ from app.schemas.user import UserCreate, UserResponse
 from app.schemas.auth import LoginResponse, Token
 from app.repositories.user_repo import UserRepository
 from app.security.auth import verify_password, create_access_token, create_refresh_token, ALGORITHM
+from app.security.dependencies import get_current_user
 from app.security.rate_limit import rate_limit_login, RateLimiter
 from app.config import settings
 

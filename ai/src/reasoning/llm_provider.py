@@ -58,6 +58,12 @@ class GeminiProvider(LLMProvider):
     def __init__(self, model_name: str = "gemini-2.0-flash", api_key: Optional[str] = None):
         key = api_key or os.getenv("LLM_API_KEY")
         if not key:
+            try:
+                from src.config import settings
+                key = getattr(settings, "llm_api_key", None)
+            except Exception:
+                pass
+        if not key:
             raise ValueError("API key must be provided for GeminiProvider or set via LLM_API_KEY.")
         super().__init__(model_name=model_name, api_key=key)
 
@@ -319,9 +325,27 @@ def get_llm_provider(
     Returns:
         An instance of LLMProvider.
     """
-    provider_name = (provider or os.getenv("LLM_PROVIDER", "gemini")).lower()
-    model_name = model or os.getenv("LLM_MODEL")
-    key = api_key or os.getenv("LLM_API_KEY")
+    try:
+        from src.config import settings
+    except Exception:
+        settings = None
+
+    provider_name = (
+        provider
+        or os.getenv("LLM_PROVIDER")
+        or (getattr(settings, "llm_provider", None) if settings else None)
+        or "gemini"
+    ).lower()
+    model_name = (
+        model
+        or os.getenv("LLM_MODEL")
+        or (getattr(settings, "llm_model", None) if settings else None)
+    )
+    key = (
+        api_key
+        or os.getenv("LLM_API_KEY")
+        or (getattr(settings, "llm_api_key", None) if settings else None)
+    )
 
     if provider_name == "gemini":
         return GeminiProvider(

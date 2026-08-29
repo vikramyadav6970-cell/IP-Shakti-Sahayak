@@ -476,9 +476,177 @@ STRATEGY_REGISTRY: Dict[str, Type[BaseChunkingStrategy]] = {
 }
 
 
+def split_oversized_chunk(chunk: Chunk, target_size: int = 500, overlap: int = 50) -> List[Chunk]:
+    """Split chunk into smaller segments with target_size tokens and overlap."""
+    text = chunk.text
+    doc_id = chunk.document_id
+    base_meta = dict(chunk.metadata)
+
+    def segment_text(raw: str) -> List[str]:
+        blocks = [b.strip() for b in re.split(r"\n\n+", raw) if b.strip()]
+        segments: List[str] = []
+        for blk in blocks:
+            if estimate_tokens(blk) <= target_size + overlap:
+                segments.append(blk)
+            else:
+                sub_lines = [l.strip() for l in blk.split("\n") if l.strip()]
+                for sl in sub_lines:
+                    if estimate_tokens(sl) <= target_size + overlap:
+                        segments.append(sl)
+                    else:
+                        sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", sl) if s.strip()]
+                        for s in sents:
+                            if estimate_tokens(s) <= target_size + overlap:
+                                segments.append(s)
+                            else:
+                                words = s.split()
+                                step = max(50, target_size - overlap)
+                                for w_i in range(0, len(words), step):
+                                    w_chunk = " ".join(words[w_i : w_i + target_size])
+                                    if w_chunk:
+                                        segments.append(w_chunk)
+        return segments
+
+    segments = segment_text(text)
+    if not segments:
+        return [chunk]
+
+    parts: List[str] = []
+    current_buf: List[str] = []
+    current_tokens = 0
+
+    for seg in segments:
+        seg_tokens = estimate_tokens(seg)
+        if current_tokens + seg_tokens > (target_size + overlap) and current_buf:
+            parts.append("\n\n".join(current_buf))
+            overlap_seg = current_buf[-1] if estimate_tokens(current_buf[-1]) <= overlap else ""
+            current_buf = [overlap_seg, seg] if overlap_seg else [seg]
+            current_tokens = estimate_tokens("\n\n".join(current_buf))
+        else:
+            current_buf.append(seg)
+            current_tokens += seg_tokens
+
+    if current_buf:
+        parts.append("\n\n".join(current_buf))
+
+    if len(parts) <= 1:
+        return [chunk]
+
+    result_chunks: List[Chunk] = []
+    for part_idx, part_text in enumerate(parts):
+        part_clean = part_text.strip()
+        if not part_clean:
+            continue
+        part_chunk_id = f"{chunk.chunk_id}#part_{part_idx + 1}"
+        meta = dict(base_meta)
+        meta["part_index"] = part_idx + 1
+        meta["parent_chunk_id"] = chunk.chunk_id
+        result_chunks.append(
+            Chunk(
+                chunk_id=part_chunk_id,
+                document_id=doc_id,
+                corpus_collection=chunk.corpus_collection,
+                text=part_clean,
+                token_count=estimate_tokens(part_clean),
+                jurisdiction=chunk.jurisdiction,
+                parent_chunk_id=chunk.chunk_id,
+                metadata=meta,
+            )
+        )
+    return result_chunks
+
+
+def normalize_chunks(raw_chunks: List[Chunk], min_tokens: int = 200, max_tokens: int = 800) -> List[Chunk]:
+    """Normalize chunks into the 200–800 token band: merge small siblings, split oversized chunks."""
+    normalized: List[Chunk] = []
+
+    # Discard pure non-substantive residual fragments (< 15 tokens)
+    valid_chunks = [
+        c for c in raw_chunks
+        if c.text and len(c.text.strip()) > 25 and c.token_count >= 15
+    ]
+    if not valid_chunks:
+        return raw_chunks
+
+    idx = 0
+    while idx < len(valid_chunks):
+        c = valid_chunks[idx]
+
+        # Case 1: Chunk is oversized (> max_tokens) -> Split into 400–600 token parts
+        if c.token_count > max_tokens:
+            splits = split_oversized_chunk(c, target_size=500, overlap=50)
+            normalized.extend(splits)
+            idx += 1
+            continue
+
+        # Case 2: Chunk is comfortably in band (min_tokens <= token_count <= max_tokens)
+        if c.token_count >= min_tokens:
+            normalized.append(c)
+            idx += 1
+            continue
+
+        # Case 3: Chunk is smaller than min_tokens -> Merge with sibling chunks from same doc/section/chapter
+        merged_text = c.text
+        merged_tokens = c.token_count
+        subsections = [str(c.metadata.get("subsection"))] if c.metadata.get("subsection") else []
+        sec_num = c.metadata.get("section") or c.metadata.get("article_number") or c.metadata.get("monograph_id")
+        doc_id = c.document_id
+
+        next_idx = idx + 1
+        while next_idx < len(valid_chunks):
+            next_c = valid_chunks[next_idx]
+            next_sec = next_c.metadata.get("section") or next_c.metadata.get("article_number") or next_c.metadata.get("monograph_id")
+
+            same_doc = next_c.document_id == doc_id
+            same_sec = next_sec == sec_num
+
+            # Merge if same section or both are short statutory siblings within max_tokens
+            can_merge = same_doc and (same_sec or (merged_tokens + next_c.token_count <= max_tokens))
+
+            if can_merge and (merged_tokens + next_c.token_count <= max_tokens):
+                add_text = next_c.text
+                header_prefix = f"{c.metadata.get('act', '')}\n"
+                if header_prefix and add_text.startswith(header_prefix):
+                    add_text = add_text[len(header_prefix):].strip()
+
+                merged_text += f"\n\n{add_text}"
+                merged_tokens = estimate_tokens(merged_text)
+                if next_c.metadata.get("subsection"):
+                    subsections.append(str(next_c.metadata.get("subsection")))
+                next_idx += 1
+                if merged_tokens >= min_tokens:
+                    break
+            else:
+                break
+
+        sub_str = "-".join(filter(None, subsections)) if subsections else None
+        merged_meta = dict(c.metadata)
+        if sub_str:
+            merged_meta["subsection"] = sub_str
+
+        chunk_id = f"{doc_id}#sec_{sec_num or idx}_{sub_str}" if sub_str else f"{doc_id}#sec_{sec_num or idx}"
+
+        normalized.append(
+            Chunk(
+                chunk_id=chunk_id,
+                document_id=doc_id,
+                corpus_collection=c.corpus_collection,
+                text=merged_text.strip(),
+                token_count=merged_tokens,
+                jurisdiction=c.jurisdiction,
+                metadata=merged_meta,
+            )
+        )
+        idx = next_idx
+
+    return normalized
+
+
 def chunk_document(document: ParsedDocument) -> List[Chunk]:
-    """Dispatcher function: routes parsed document to the collection-specific chunking strategy."""
+    """Dispatcher function: routes parsed document to collection-specific chunking strategy and normalizes."""
     collection = document.corpus_collection
     strategy_cls = STRATEGY_REGISTRY.get(collection, LegalStatutoryChunker)
     strategy = strategy_cls()
-    return strategy.chunk(document)
+    raw_chunks = strategy.chunk(document)
+    return normalize_chunks(raw_chunks, min_tokens=200, max_tokens=800)
+

@@ -54,14 +54,22 @@ class QdrantIndexer:
         if client is not None:
             self.client = client
         else:
-            qdrant_url = url or os.getenv("QDRANT_URL")
-            qdrant_api_key = api_key or os.getenv("QDRANT_API_KEY")
+            try:
+                from src.config import settings
+                default_url = getattr(settings, "qdrant_url", None)
+                default_key = getattr(settings, "qdrant_api_key", None)
+            except Exception:
+                default_url = None
+                default_key = None
+
+            qdrant_url = url or os.getenv("QDRANT_URL") or default_url
+            qdrant_api_key = api_key or os.getenv("QDRANT_API_KEY") or default_key
 
             if not qdrant_url:
                 logger.warning("No QDRANT_URL provided. Initializing in-memory Qdrant instance.")
                 self.client = QdrantClient(":memory:")
             else:
-                self.client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+                self.client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key, timeout=120.0)
 
     def ensure_collections(
         self,
@@ -103,6 +111,7 @@ class QdrantIndexer:
         self,
         chunks: List[Chunk],
         batch_size: int = 64,
+        max_retries: int = 3,
     ) -> Dict[str, int]:
         """Embed and upsert chunks into their respective Qdrant collections.
 
@@ -112,10 +121,13 @@ class QdrantIndexer:
         Args:
             chunks: List of Chunk objects from T1.3.
             batch_size: Number of chunks per embedding/upsert batch.
+            max_retries: Maximum retry attempts on network/timeout errors.
 
         Returns:
             Dictionary mapping collection name to number of indexed points.
         """
+        import time
+
         if not chunks:
             return {}
 
@@ -133,6 +145,7 @@ class QdrantIndexer:
 
         for col_name, col_chunks in chunks_by_collection.items():
             total_indexed = 0
+            logger.info("Indexing %d chunks into collection '%s'...", len(col_chunks), col_name)
 
             for i in range(0, len(col_chunks), batch_size):
                 batch = col_chunks[i : i + batch_size]
@@ -167,17 +180,29 @@ class QdrantIndexer:
                         )
                     )
 
-                # Upsert batch into Qdrant
-                self.client.upsert(
-                    collection_name=col_name,
-                    points=points,
-                )
-                total_indexed += len(points)
+                # Upsert batch into Qdrant with retry loop
+                for attempt in range(1, max_retries + 1):
+                    try:
+                        self.client.upsert(
+                            collection_name=col_name,
+                            points=points,
+                        )
+                        total_indexed += len(points)
+                        logger.info("  [%s] Upserted batch %d-%d / %d", col_name, i + 1, i + len(points), len(col_chunks))
+                        break
+                    except Exception as exc:
+                        if attempt == max_retries:
+                            logger.error("Failed to upsert batch into %s after %d attempts: %s", col_name, max_retries, exc)
+                            raise
+                        wait_sec = attempt * 2
+                        logger.warning("Upsert into %s failed (attempt %d/%d): %s. Retrying in %ds...", col_name, attempt, max_retries, exc, wait_sec)
+                        time.sleep(wait_sec)
 
             results[col_name] = total_indexed
-            logger.info("Indexed %d chunks into collection '%s'", total_indexed, col_name)
+            logger.info("Completed collection '%s': %d total points indexed.", col_name, total_indexed)
 
         return results
+
 
     def search(
         self,

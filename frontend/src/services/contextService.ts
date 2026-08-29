@@ -3,8 +3,25 @@ import type { ContextQuestion, DomainIntent } from '@/types'
 import { logger } from '@/lib/logger'
 
 /**
- * Mock context questions per intent — used until backend T3.5 is ready.
- * // TODO(contract): replace with real API once ai/ T3.5 context-gathering agent is done.
+ * Backend answer_type mapping → frontend AnswerType.
+ * Backend uses 'text' | 'single_choice' | 'multiple_choice' | 'FREE_TEXT' | 'SINGLE_SELECT' | 'MULTI_SELECT'
+ * Frontend uses 'text' | 'select' | 'multi_select' | 'radio' | 'checkbox'
+ */
+const ANSWER_TYPE_MAP: Record<string, ContextQuestion['answer_type']> = {
+  text: 'text',
+  single_choice: 'select',
+  multiple_choice: 'multi_select',
+  FREE_TEXT: 'text',
+  SINGLE_SELECT: 'select',
+  MULTI_SELECT: 'multi_select',
+}
+
+function mapAnswerType(backendType: string): ContextQuestion['answer_type'] {
+  return ANSWER_TYPE_MAP[backendType] ?? 'text'
+}
+
+/**
+ * Mock context questions per intent — used until backend is available.
  */
 const MOCK_QUESTIONS: Record<DomainIntent, ContextQuestion[]> = {
   BUSINESS: [
@@ -148,20 +165,42 @@ interface ProcessContextParams {
   answers: Record<string, string | string[]>
 }
 
+interface ProcessContextResult {
+  session_id: string
+  context_object: Record<string, unknown>
+  entity_set: Record<string, unknown>
+}
+
 /**
  * Fetch context-gathering questions for a given intent.
- * Uses mock data until backend is ready.
+ * Backend returns { intent, questions } — we extract .questions and map field names.
  */
 export async function fetchContextQuestions({ intent }: FetchQuestionsParams): Promise<ContextQuestion[]> {
   try {
-    const response = await apiClient.get<ContextQuestion[]>(
+    const response = await apiClient.get<{ intent: string; questions: Array<{
+      question_id: string
+      question_text: string
+      answer_type: string
+      options?: string[]
+      required: boolean
+      placeholder?: string
+      help_text?: string
+    }> }>(
       `/api/v1/context/questions`,
       { params: { intent } }
     )
-    return response.data
+    // Map backend field names → frontend field names
+    return response.data.questions.map((q) => ({
+      id: q.question_id,
+      question_text: q.question_text,
+      answer_type: mapAnswerType(q.answer_type),
+      options: q.options,
+      required: q.required,
+      placeholder: q.placeholder,
+      help_text: q.help_text,
+    }))
   } catch {
     logger.info('Backend not available, using mock context questions for intent:', intent)
-    // Simulate network delay for realistic UX
     await new Promise((resolve) => setTimeout(resolve, 600))
     return MOCK_QUESTIONS[intent] ?? []
   }
@@ -169,30 +208,29 @@ export async function fetchContextQuestions({ intent }: FetchQuestionsParams): P
 
 /**
  * Process context answers — sends to backend for entity extraction.
- * Returns mock data until backend is ready.
+ * Backend returns { session_id, context_object, entity_set }.
  */
-export async function processContextAnswers({ intent, answers }: ProcessContextParams) {
+export async function processContextAnswers({ intent, answers }: ProcessContextParams): Promise<ProcessContextResult> {
   try {
-    const response = await apiClient.post('/api/v1/context/process', {
-      domain_intent: intent,
+    const response = await apiClient.post<ProcessContextResult>('/api/v1/context/process', {
+      intent,
       answers,
     })
-    return response.data as {
-      context_object: Record<string, unknown>
-      entity_set: Record<string, unknown>
-    }
+    return response.data
   } catch {
     logger.info('Backend not available, using mock context processing')
     await new Promise((resolve) => setTimeout(resolve, 800))
     return {
+      session_id: `mock-session-${Date.now()}`,
       context_object: { domain_intent: intent, answers },
       entity_set: {
         herbs: [],
-        jurisdictions: ['India'],
+        jurisdictions: ['INDIA'],
         ip_types: [],
-        product_types: [],
-        regulations: [],
-        organizations: [],
+        biological_resources: [],
+        formulation_name: null,
+        destination_country: null,
+        regulatory_regime: null,
       },
     }
   }

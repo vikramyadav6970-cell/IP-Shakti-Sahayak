@@ -31,7 +31,7 @@ const COLLECTION_COLORS: Record<QdrantCollection, string> = {
  */
 export function ChatPage() {
   const prefersReducedMotion = useReducedMotion()
-  const { domain_intent, context_object } = useIntentStore()
+  const { domain_intent, context_object, session_id } = useIntentStore()
   const { mode: jurisdiction } = useJurisdictionStore()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -39,6 +39,7 @@ export function ChatPage() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [latestResponse, setLatestResponse] = useState<ChatResponse | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [showSidebar, setShowSidebar] = useState(false)
   const [showEscalation, setShowEscalation] = useState(false)
 
@@ -82,12 +83,16 @@ export function ChatPage() {
       const response = await sendChatQuery({
         question,
         domain_intent: domain_intent ?? 'OTHER',
-        context_object: context_object,
+        session_id: session_id,
         jurisdiction: jurisdiction,
         language: 'en',
-        conversation_id: null,
+        conversation_id: conversationId,
       })
       setLatestResponse(response)
+      // Track conversation_id for follow-up messages
+      if (response.conversation_id) {
+        setConversationId(response.conversation_id)
+      }
       const assistantMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'assistant',
@@ -111,7 +116,7 @@ export function ChatPage() {
       setMessages((prev) => [...prev, errorMsg])
     }
     setLoading(false)
-  }, [domain_intent, context_object, jurisdiction])
+  }, [domain_intent, session_id, jurisdiction, conversationId])
 
   const handleSend = useCallback(() => {
     if (!input.trim() || loading) return

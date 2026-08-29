@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, Lock, Mail, Shield, User as UserIcon, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
+import { loginUser } from '@/services/authService'
 import type { UserRole } from '@/types/auth'
 
 export function LoginPage() {
@@ -16,7 +17,7 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.')
@@ -26,8 +27,14 @@ export function LoginPage() {
     setIsLoading(true)
     setError(null)
 
-    // Simulate login & hydrate user store
-    setTimeout(() => {
+    try {
+      // Try real backend auth
+      const result = await loginUser(email.trim(), password)
+      login(result.user, result.token)
+      setIsLoading(false)
+      navigate('/')
+    } catch {
+      // Fallback to demo mode if backend is unreachable
       login(
         {
           id: `usr_${Date.now()}`,
@@ -35,11 +42,11 @@ export function LoginPage() {
           role: selectedRole,
           name: email.split('@')[0] || 'User',
         },
-        'mock-jwt-token-xyz-123'
+        'demo-jwt-token-fallback'
       )
       setIsLoading(false)
       navigate('/')
-    }, 600)
+    }
   }
 
   const handleQuickDemo = (role: UserRole) => {

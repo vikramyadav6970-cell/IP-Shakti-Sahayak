@@ -15,4 +15,9 @@ Authoritative Evidence Retrieved from Verified Corpus:
 {evidence_blocks}
 
 Instructions:
-Synthesize an authoritative, step-by-step regulatory advisory answering the user's question. Reference specific statutory sections, pharmacopoeial standards, and required procedural forms. Place inline citations `[chunk_id]` for each assertion.
+Synthesize an authoritative, structured regulatory advisory answering the user's question within 500 to 1000 tokens (400 to 700 words).
+1. Provide an Executive Summary directly answering the core patentability / legal question.
+2. Provide Statutory & Prior Art Analysis referencing relevant Acts (e.g. Indian Patents Act 1970 Section 3(p), Biological Diversity Act 2002/2023, TKDL, Pharmacopoeias).
+3. Anchor every legal assertion with inline citations `[chunk_id]`.
+4. Provide clear, actionable next steps for the innovator.
+5. Do NOT dump raw monograph tables of contents or irrelevant raw text blocks.
